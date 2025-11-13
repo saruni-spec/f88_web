@@ -124,6 +124,8 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    console.log("Total Tax Calculated:", totalTax, data);
+
     return NextResponse.json(
       { message: "Success", data, totalTax },
       { status: 200 }

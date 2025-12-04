@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
         if (item.hsCode) result.hsCode = item.hsCode;
       }
 
-      return result;
+      return toSnakeCase(result);
     });
 
 
@@ -88,4 +88,24 @@ export async function POST(req: NextRequest) {
     console.error("Error during fetch + delete:", error);
     return NextResponse.json({ error }, { status: 500 });
   }
+}
+function toSnakeCase(obj: any) {
+  const result: any = {};
+
+  for (const [key, value] of Object.entries(obj)) {
+    let snakeKey;
+
+    if (key === "hsCode") {
+      snakeKey = "hscode";     
+    } else {
+      snakeKey = key
+        .replace(/([A-Z])/g, "_$1")
+        .replace(/-/g, "_")
+        .toLowerCase();
+    }
+
+    result[snakeKey] = value;
+  }
+
+  return result;
 }

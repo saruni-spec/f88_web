@@ -204,7 +204,6 @@ export async function POST(req: NextRequest) {
 
     body.items = items;
 
-    console.log("Transformed data:", body);
 
     const results = await fetch(
       "https://kratest.pesaflow.com/api/customs/passenger-declaration",
@@ -228,6 +227,8 @@ export async function POST(req: NextRequest) {
     }
 
     const data: Declaration = await results.json();
+
+    console.log("Declaration Data:\n", data);
 
     // --- 1. CALCULATE TOTAL TAX ---
     let totalTax = 0;

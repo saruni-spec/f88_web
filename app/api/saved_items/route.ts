@@ -28,6 +28,11 @@ export async function POST(req: NextRequest) {
         result.file = item.file;
       }
 
+
+//Add value to every item
+      // @ts-ignore
+      item["value"] = item.amount || item.valueOfFund;
+      
       // Category-specific fields
       if (item.category === "Mobile Device") {
         if (item.quantity) result.quantity = item.quantity;
@@ -37,6 +42,7 @@ export async function POST(req: NextRequest) {
         if (item.make) result.make = item.make;
         if (item.model) result.model = item.model;
         if (item.imei) result.imei = item.imei;
+
       } else if (item.category === "Re-importation Goods") {
         if (item.cert) result.cert = item.cert;
       } else if (item.category === "Cash Exceeding $10,000" || item.category === "Currency over $10,000") {

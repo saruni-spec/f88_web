@@ -1365,9 +1365,11 @@ export default function Home() {
       </div>
 
       <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <FormProvider>
-          <MainContent />
-        </FormProvider>
+        <Suspense fallback={<div>Loading...</div>}>
+          <FormProvider>
+            <MainContent />
+          </FormProvider>
+        </Suspense>
       </div>
     </div>
   );

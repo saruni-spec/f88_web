@@ -1,1 +1,74 @@
 @import "tailwindcss";
+
+/* KRA (Kenya Revenue Authority) Color Theme */
+:root {
+  --kra-navy: #003366;
+  --kra-navy-dark: #002244;
+  --kra-navy-light: #004488;
+  --kra-gold: #FFB81C;
+  --kra-gold-dark: #D4A017;
+  --kra-gold-light: #FFD54F;
+  --kra-red: #C8102E;
+  --kra-red-dark: #A00D24;
+  --kra-green: #008751;
+  --kra-gray: #5A5A5A;
+  --kra-light-gray: #F5F5F5;
+}
+
+/* Toast notification animation */
+@keyframes slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in {
+  animation: slide-in 0.3s ease-out forwards;
+}
+
+/* KRA Button Styles */
+.btn-kra-primary {
+  background-color: var(--kra-navy);
+  color: white;
+}
+
+.btn-kra-primary:hover {
+  background-color: var(--kra-navy-dark);
+}
+
+.btn-kra-secondary {
+  background-color: var(--kra-gold);
+  color: var(--kra-navy);
+}
+
+.btn-kra-secondary:hover {
+  background-color: var(--kra-gold-dark);
+}
+
+/* KRA Input Focus */
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--kra-navy) !important;
+  box-shadow: 0 0 0 2px rgba(0, 51, 102, 0.2);
+}
+
+/* Radio Button Theme - KRA Gold */
+input[type="radio"]:checked {
+  accent-color: var(--kra-gold);
+}
+
+/* Mobile-friendly touch targets */
+@media (max-width: 640px) {
+  .touch-target {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+}

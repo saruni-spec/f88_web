@@ -10,9 +10,10 @@ interface LayoutProps {
   step?: string;
   onBack?: () => void;
   showMenu?: boolean;
+  showHeader?: boolean;
 }
 
-export function Layout({ children, title, step, onBack, showMenu = true }: LayoutProps) {
+export function Layout({ children, title, step, onBack, showMenu = true, showHeader = true }: LayoutProps) {
   const router = useRouter();
 
   const handleMenuClick = () => {
@@ -25,34 +26,36 @@ export function Layout({ children, title, step, onBack, showMenu = true }: Layou
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-blue-600 text-white sticky top-0 z-10 shadow-md">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {onBack && (
+      {showHeader && (
+        <div className="bg-blue-600 text-white sticky top-0 z-10 shadow-md">
+          <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {onBack && (
+                <button
+                  onClick={onBack}
+                  className="p-2 hover:bg-blue-700 rounded-lg transition-colors"
+                  aria-label="Go back"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </button>
+              )}
+              <div>
+                <h1 className="text-lg font-medium">{title}</h1>
+                {step && <p className="text-sm text-blue-100">{step}</p>}
+              </div>
+            </div>
+            {showMenu && (
               <button
-                onClick={onBack}
+                onClick={handleMenuClick}
                 className="p-2 hover:bg-blue-700 rounded-lg transition-colors"
-                aria-label="Go back"
+                aria-label="Menu"
               >
-                <ArrowLeft className="w-5 h-5" />
+                <Menu className="w-5 h-5" />
               </button>
             )}
-            <div>
-              <h1 className="text-lg font-medium">{title}</h1>
-              {step && <p className="text-sm text-blue-100">{step}</p>}
-            </div>
           </div>
-          {showMenu && (
-            <button
-              onClick={handleMenuClick}
-              className="p-2 hover:bg-blue-700 rounded-lg transition-colors"
-              aria-label="Menu"
-            >
-              <Menu className="w-5 h-5" />
-            </button>
-          )}
         </div>
-      </div>
+      )}
 
       {/* Content */}
       <div className="max-w-4xl mx-auto px-4 py-6">

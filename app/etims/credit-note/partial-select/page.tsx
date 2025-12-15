@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Layout, Card, Button } from '../../_components/Layout';
 import { getCreditNote, saveCreditNote, CreditNoteData } from '../../_lib/store';
-import { Check } from 'lucide-react';
+import { FileText, Edit2, ArrowLeft } from 'lucide-react';
 
 export default function CreditNotePartialSelect() {
   const router = useRouter();
@@ -32,7 +32,7 @@ export default function CreditNotePartialSelect() {
     setSelectedItems(newSelected);
   };
 
-  const handleProceed = () => {
+  const handleEditItems = () => {
     if (selectedItems.size === 0) {
       alert('Please select at least one item');
       return;
@@ -50,57 +50,79 @@ export default function CreditNotePartialSelect() {
     return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Loading...</div>;
   }
 
+  const { invoice } = creditNote;
+
   return (
     <Layout 
-      title="Select Items" 
-      step="Step 3 of 5"
-      onBack={() => router.push('/etims/credit-note/found')}
+      title=""
+      showHeader={false}
+      onBack={() => router.push('/etims/credit-note/search')}
     >
       <div className="space-y-4">
-        <Card className="bg-blue-50 border-blue-200">
-          <p className="text-sm text-blue-900">
-            Select the items you want to include in the credit note
-          </p>
+        {/* Header Banner */}
+        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-center">
+          <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <FileText className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-xl font-bold text-white mb-1">Invoice Details</h1>
+          <p className="text-blue-100 text-sm">Select items to include in credit note</p>
+        </div>
+
+        {/* Invoice Info Card */}
+        <Card>
+          <div className="flex justify-between items-start mb-2">
+            <div>
+              <p className="text-xs text-gray-500">invoice number</p>
+              <p className="text-gray-900 font-medium">{invoice.invoiceNumber}</p>
+            </div>
+            <span className="text-xs px-3 py-1 bg-blue-100 text-blue-700 rounded-full font-medium">
+              partial
+            </span>
+          </div>
+          <div className="mb-2">
+            <p className="text-xs text-gray-500">invoice total amount</p>
+            <p className="text-xl font-bold text-gray-900 flex items-center gap-1">
+              <span className="text-sm">💳</span> KES {invoice.total.toLocaleString()}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500">reason</p>
+            <p className="text-blue-600 text-sm">{creditNote.reason || 'Not specified'}</p>
+          </div>
         </Card>
 
+        {/* Instruction */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-center">
+          <p className="text-sm text-blue-800">Tap items below to select for credit note</p>
+        </div>
+
+        {/* Items List */}
         <div className="space-y-3">
-          {creditNote.invoice.items.map((item) => {
+          {invoice.items.map((item) => {
             const isSelected = selectedItems.has(item.id);
+            const itemTotal = item.unitPrice * item.quantity;
             
             return (
               <button
                 key={item.id}
                 onClick={() => toggleItem(item.id)}
-                className={`w-full text-left p-4 rounded-lg border-2 transition-colors ${
+                className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
                   isSelected
-                    ? 'border-blue-600 bg-blue-50'
-                    : 'border-gray-300 bg-white hover:border-gray-400'
+                    ? 'border-blue-600 bg-white shadow-sm'
+                    : 'border-gray-200 bg-white hover:border-gray-300'
                 }`}
               >
-                <div className="flex items-start gap-3">
-                  <div className={`w-6 h-6 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
-                    isSelected ? 'border-blue-600 bg-blue-600' : 'border-gray-400 bg-white'
+                <div className="flex items-center gap-3">
+                  <div className={`w-6 h-6 rounded flex items-center justify-center flex-shrink-0 ${
+                    isSelected ? 'bg-gray-800' : 'bg-gray-200'
                   }`}>
-                    {isSelected && <Check className="w-4 h-4 text-white" />}
+                    {isSelected && <span className="text-white text-xs">✓</span>}
                   </div>
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs px-2 py-0.5 rounded bg-gray-200 text-gray-700 font-medium">
-                        {item.type}
-                      </span>
-                      <h4 className="text-gray-900 font-medium">{item.name}</h4>
-                    </div>
-                    {item.description && (
-                      <p className="text-sm text-gray-600 mb-2">{item.description}</p>
-                    )}
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">
-                        Available: {item.quantity} units
-                      </span>
-                      <span className="text-gray-900 font-medium">
-                        KES {(item.unitPrice * item.quantity).toLocaleString()}
-                      </span>
-                    </div>
+                    <p className="text-gray-900 font-medium">{item.name}</p>
+                    <p className="text-sm text-gray-500">
+                      Qty: {item.quantity} × KES {item.unitPrice.toLocaleString()} = KES {itemTotal.toLocaleString()}
+                    </p>
                   </div>
                 </div>
               </button>
@@ -108,9 +130,28 @@ export default function CreditNotePartialSelect() {
           })}
         </div>
 
-        <Button onClick={handleProceed} disabled={selectedItems.size === 0}>
-          Proceed ({selectedItems.size} item{selectedItems.size !== 1 ? 's' : ''} selected)
-        </Button>
+        {/* Edit Selected Items Button */}
+        <button
+          onClick={handleEditItems}
+          disabled={selectedItems.size === 0}
+          className={`w-full py-4 rounded-full font-medium flex items-center justify-center gap-2 transition-colors ${
+            selectedItems.size > 0
+              ? 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+              : 'bg-gray-50 text-gray-400 cursor-not-allowed'
+          }`}
+        >
+          <Edit2 className="w-4 h-4" />
+          Edit Selected Items
+        </button>
+
+        {/* Go Back Button */}
+        <button
+          onClick={() => router.push('/etims/credit-note/search')}
+          className="w-full py-4 border-2 border-gray-200 rounded-full text-gray-700 font-medium flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Go Back
+        </button>
       </div>
     </Layout>
   );

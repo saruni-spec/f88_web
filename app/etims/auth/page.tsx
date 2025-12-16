@@ -10,9 +10,8 @@ import { Loader2, Phone } from 'lucide-react';
 function AuthContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const numberFromUrl = searchParams.get('number');
+  const phoneNumber = searchParams.get('number') || '';
   
-  const [phoneNumber, setPhoneNumber] = useState(numberFromUrl || '');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -85,10 +84,9 @@ function AuthContent() {
               <input
                 type="tel"
                 value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                placeholder="07XXXXXXXX"
+                readOnly
                 className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--kra-red)] focus:border-transparent"
-                disabled={loading}
+                disabled
               />
             </div>
 

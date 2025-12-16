@@ -118,22 +118,45 @@ export const clearBuyerInitiated = () => {
 
 // User Session Store
 const USER_SESSION_KEY = 'etims_user_session';
+const SESSION_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
 
 export interface UserSession {
   msisdn: string;
   name?: string;
   pin?: string;
+  lastActive: number; // timestamp
 }
 
-export const saveUserSession = (data: UserSession) => {
+export const saveUserSession = (data: Omit<UserSession, 'lastActive'>) => {
   if (typeof window === 'undefined') return;
-  sessionStorage.setItem(USER_SESSION_KEY, JSON.stringify(data));
+  const session: UserSession = {
+    ...data,
+    lastActive: Date.now()
+  };
+  sessionStorage.setItem(USER_SESSION_KEY, JSON.stringify(session));
+};
+
+export const refreshSession = () => {
+  if (typeof window === 'undefined') return;
+  const session = getUserSession();
+  if (session) {
+    session.lastActive = Date.now();
+    sessionStorage.setItem(USER_SESSION_KEY, JSON.stringify(session));
+  }
 };
 
 export const getUserSession = (): UserSession | null => {
   if (typeof window === 'undefined') return null;
   const data = sessionStorage.getItem(USER_SESSION_KEY);
   return data ? JSON.parse(data) : null;
+};
+
+export const isSessionValid = (): boolean => {
+  const session = getUserSession();
+  if (!session) return false;
+  
+  const elapsed = Date.now() - session.lastActive;
+  return elapsed < SESSION_TIMEOUT_MS;
 };
 
 export const clearUserSession = () => {

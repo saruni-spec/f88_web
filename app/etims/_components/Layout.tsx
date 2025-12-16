@@ -3,6 +3,7 @@
 import { ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Menu } from 'lucide-react';
+import { useSessionManager } from '../_lib/useSession';
 
 interface LayoutProps {
   children: ReactNode;
@@ -15,6 +16,9 @@ interface LayoutProps {
 
 export function Layout({ children, title, step, onBack, showMenu = true, showHeader = true }: LayoutProps) {
   const router = useRouter();
+  
+  // Session management - auto-refresh and timeout handling
+  useSessionManager();
 
   const handleMenuClick = () => {
     const action = window.confirm('Menu:\n1. Go to Main Menu\n2. Log Out\n\nClick OK for Main Menu, Cancel to close');

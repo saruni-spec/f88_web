@@ -19,8 +19,17 @@ export function useSessionManager() {
 
     // Check if session exists and is valid
     if (!isSessionValid()) {
+      // Get msisdn before clearing session so user can easily re-login
+      const session = getUserSession();
+      const msisdn = session?.msisdn;
       clearUserSession();
-      router.push('/etims/auth');
+      
+      // Redirect with phone number preserved if available
+      if (msisdn) {
+        router.push(`/etims/auth?number=${encodeURIComponent(msisdn)}`);
+      } else {
+        router.push('/etims/auth');
+      }
       return false;
     }
 

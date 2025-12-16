@@ -83,20 +83,6 @@ function AuthContent() {
         {/* Phone Input */}
         <Card>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* <div>
-              <label className="block text-xs text-gray-600 font-medium mb-1">
-                <Phone className="w-3.5 h-3.5 inline mr-1" />
-                
-              </label>
-              <input
-                type="tel"
-                value={phoneNumber}
-                readOnly
-                className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--kra-red)] focus:border-transparent"
-                disabled
-              />
-            </div> */}
-
             {error && (
               <div className="p-2 bg-red-50 border border-red-200 rounded-lg">
                 <p className="text-xs text-red-600">{error}</p>

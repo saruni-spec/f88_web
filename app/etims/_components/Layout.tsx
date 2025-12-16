@@ -31,9 +31,19 @@ export function Layout({ children, title, step, onBack, showMenu = false, showHe
 
   const handleLogout = () => {
     if (confirm('Are you sure you want to logout?')) {
+      // Get msisdn before clearing so user can easily re-login
+      const session = typeof window !== 'undefined' ? sessionStorage.getItem('etims_user_session') : null;
+      const msisdn = session ? JSON.parse(session)?.msisdn : null;
+      
       clearUserSession();
       sessionStorage.clear();
-      router.push('/etims/auth');
+      
+      // Redirect with phone number preserved if available
+      if (msisdn) {
+        router.push(`/etims/auth?number=${encodeURIComponent(msisdn)}`);
+      } else {
+        router.push('/etims/auth');
+      }
     }
   };
 

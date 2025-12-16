@@ -78,11 +78,11 @@ function SellerViewContent() {
         <div className="grid grid-cols-2 gap-2">
           <div className="bg-blue-50 rounded-lg px-3 py-2">
             <p className="text-[10px] text-blue-600">BUYER</p>
-            <p className="text-sm font-medium truncate text-blue-800">{invoice.buyer_name || 'N/A'}</p>
+            <p className="text-xs font-medium truncate text-blue-800">{invoice.buyer_name || 'N/A'}</p>
           </div>
           <div className="bg-gray-100 rounded-lg px-3 py-2">
             <p className="text-[10px] text-gray-500">SELLER</p>
-            <p className="text-sm font-medium truncate">{invoice.seller_name || sellerName || 'N/A'}</p>
+            <p className="text-xs font-medium truncate">{invoice.seller_name || sellerName || 'N/A'}</p>
           </div>
         </div>
 

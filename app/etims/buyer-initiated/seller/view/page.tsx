@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Layout, Card, Button } from '../../../_components/Layout';
 import { fetchInvoices, processBuyerInvoice } from '../../../../actions/etims';
 import { FetchedInvoice } from '../../../_lib/definitions';
-import { Loader2, Download, ArrowLeft, Store } from 'lucide-react';
+import { Loader2, Download, ArrowLeft, Store, ChevronRight } from 'lucide-react';
 
 function SellerViewContent() {
   const router = useRouter();
@@ -102,10 +102,21 @@ function SellerViewContent() {
           </table>
         </Card>
 
-        {/* Download PDF */}
-        <button onClick={() => alert('PDF coming soon')} className="w-full py-2 border border-dashed border-gray-300 rounded-lg text-gray-600 text-xs font-medium flex items-center justify-center gap-1">
-          <Download className="w-3.5 h-3.5" />Download PDF
-        </button>
+        {/* Actions */}
+        <div className="grid grid-cols-2 gap-2">
+          <button 
+            onClick={() => alert('PDF download coming soon')} 
+            className="py-2 border border-dashed border-gray-300 rounded-lg text-gray-600 text-xs font-medium flex items-center justify-center gap-1"
+          >
+            <Download className="w-3.5 h-3.5" />Download
+          </button>
+          <button 
+            onClick={() => alert('View more details coming soon')} 
+            className="py-2 border border-gray-300 rounded-lg text-gray-600 text-xs font-medium flex items-center justify-center gap-1"
+          >
+            View More<ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
 
         {/* Decision (pending only) */}
         {isPending && (

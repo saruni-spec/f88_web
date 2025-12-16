@@ -117,14 +117,7 @@ function EtimsHomeContent() {
           </p>
         </Card>
 
-        {/* Log Out */}
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 transition-colors font-medium"
-        >
-          <LogOut className="w-5 h-5" />
-          Log Out
-        </button>
+       
       </div>
     </Layout>
   );

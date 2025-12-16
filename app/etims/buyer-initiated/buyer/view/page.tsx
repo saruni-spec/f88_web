@@ -2,16 +2,17 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Layout, Card, Button, TotalsCard, IdentityStrip } from '../../../_components/Layout';
+import { Layout, Card, Button } from '../../../_components/Layout';
 import { fetchInvoices } from '../../../../actions/etims';
 import { FetchedInvoice } from '../../../_lib/definitions';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Download, ArrowLeft, ChevronRight } from 'lucide-react';
 
-function SellerViewContent() {
+function BuyerViewContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const id = searchParams.get('id');
   const phone = searchParams.get('phone');
+  const status = searchParams.get('status') || 'pending';
   
   const [invoice, setInvoice] = useState<FetchedInvoice | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -19,138 +20,153 @@ function SellerViewContent() {
 
   useEffect(() => {
     if (!id || !phone) {
-        setIsLoading(false);
-        if (!phone) setError('Phone number missing');
-        else setError('Invoice ID missing');
-        return;
+      setIsLoading(false);
+      setError(!phone ? 'Phone number missing' : 'Invoice ID missing');
+      return;
     }
 
     const loadInvoice = async () => {
-        try {
-            const result = await fetchInvoices(phone);
-            if (result.success && result.invoices) {
-                const found = result.invoices.find(inv => 
-                    inv.reference === id || inv.invoice_id === id
-                );
-                
-                if (found) {
-                    setInvoice(found);
-                } else {
-                    setError('Invoice not found');
-                }
-            } else {
-                setError(result.error || 'Failed to fetch invoices');
-            }
-        } catch (err: any) {
-            setError(err.message || 'Error loading invoice');
-        } finally {
-            setIsLoading(false);
+      try {
+        const result = await fetchInvoices(phone);
+        if (result.success && result.invoices) {
+          const found = result.invoices.find(inv => 
+            inv.reference === id || inv.invoice_id === id
+          );
+          if (found) setInvoice(found);
+          else setError('Invoice not found');
+        } else {
+          setError(result.error || 'Failed to load');
         }
+      } catch (err: any) {
+        setError(err.message || 'Error');
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     loadInvoice();
   }, [id, phone]);
 
   if (isLoading) {
-    return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Loading...</div>;
+    return (
+      <Layout title="Invoice" onBack={() => router.back()}>
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-6 h-6 animate-spin" />
+        </div>
+      </Layout>
+    );
   }
 
   if (error || !invoice) {
     return (
-        <Layout title="Error" onBack={() => router.back()}>
-            <Card className="p-8 text-center">
-                <p className="text-red-600">{error || 'Invoice not found'}</p>
-                <Button className="mt-4" onClick={() => router.back()}>Go Back</Button>
-            </Card>
-        </Layout>
+      <Layout title="Error" onBack={() => router.back()}>
+        <Card className="text-center py-6">
+          <p className="text-red-600 text-sm mb-3">{error || 'Invoice not found'}</p>
+          <Button onClick={() => router.back()}>Back</Button>
+        </Card>
+      </Layout>
     );
   }
+
+  const statusDisplay = invoice.status?.toUpperCase() || 'PENDING';
 
   return (
     <Layout 
       title="Invoice Details" 
-      step="View Only"
-      onBack={() => router.back()}
+      showHeader={false}
+      onBack={() => router.push(`/etims/buyer-initiated/buyer/invoices?status=${status}`)}
     >
-      <div className="space-y-6">
-        {/* Warning Banner */}
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-center gap-3">
-            <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-            <p className="text-xs text-amber-800 font-medium">This flow is only for testing</p>
+      <div className="space-y-3">
+        {/* Header */}
+        <div className="bg-[var(--kra-black)] rounded-xl p-4 text-white">
+          <h1 className="text-base font-semibold">Invoice Details</h1>
+          <p className="text-gray-400 text-xs">Status: {statusDisplay}</p>
+          <p className="text-xs text-gray-500 mt-1">ID: {invoice.reference || invoice.invoice_id}</p>
         </div>
 
-        {/* Header Section */}
-        <div className="space-y-4">
-             {/* Buyer & Supplier */}
-             <div className="grid grid-cols-1 gap-4">
-                <Card className="border-l-4 border-l-blue-500">
-                    <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Buyer</p>
-                    <p className="text-gray-900 font-medium text-lg">{invoice.seller_name || 'N/A'}</p> 
-                    {/* Note: invoice.seller_name comes from the 'Name' part of string string. In Seller context, this is the other party (Buyer) */}
-                </Card>
-
-                <Card className="border-l-4 border-l-purple-500">
-                    <p className="text-xs text-gray-500 uppercase font-semibold mb-1">Supplier (You)</p>
-                    <p className="text-gray-900 font-medium text-lg">Me</p>
-                </Card>
-             </div>
+        {/* Seller/Buyer */}
+        <div className="grid grid-cols-2 gap-2">
+          <div className="bg-gray-100 rounded-lg px-3 py-2">
+            <p className="text-[10px] text-gray-500">SELLER</p>
+            <p className="text-sm font-medium truncate">{invoice.seller_name || 'N/A'}</p>
+          </div>
+          <div className="bg-gray-100 rounded-lg px-3 py-2">
+            <p className="text-[10px] text-gray-500">BUYER</p>
+            <p className="text-sm font-medium truncate">{invoice.buyer_name || 'You'}</p>
+          </div>
         </div>
 
-        {/* Invoice Items */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="bg-gray-50 px-4 py-3 border-b border-gray-100 flex justify-between items-center">
-                <h3 className="text-gray-900 font-medium">Items</h3>
-                <span className="bg-gray-200 text-gray-600 text-xs px-2 py-0.5 rounded-full">{invoice.items ? invoice.items.length : 0}</span>
-            </div>
-            <div className="divide-y divide-gray-100">
-                {invoice.items && invoice.items.map((item, i) => (
-                <div key={i} className="p-4 hover:bg-gray-50 transition-colors">
-                    <div className="flex justify-between items-start mb-1">
-                        <h4 className="text-gray-900 font-medium">{item.item_name}</h4>
-                        <span className="text-gray-900 font-semibold">KES {(item.unit_price * item.quantity).toLocaleString()}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-sm text-gray-500">
-                        <span>Rate: {item.unit_price.toLocaleString()}</span>
-                        <span>Qty: {item.quantity}</span>
-                    </div>
-                </div>
-                ))}
-            </div>
-            {/* Total Section */}
-            <div className="bg-gray-900 p-4 text-white">
-                <div className="flex justify-between items-center">
-                    <span className="text-gray-400">Total Amount</span>
-                    <span className="text-2xl font-bold">KES {invoice.total_amount.toLocaleString()}</span>
-                </div>
-            </div>
+        {/* Items Table */}
+        <Card>
+          <table className="w-full text-xs">
+            <thead className="bg-gray-50">
+              <tr className="border-b">
+                <th className="text-left py-1.5 px-1 font-medium text-gray-600">Item</th>
+                <th className="text-center py-1.5 px-1 font-medium text-gray-600">Qty × Price</th>
+                <th className="text-right py-1.5 px-1 font-medium text-gray-600">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {invoice.items?.map((item, i) => (
+                <tr key={i} className="border-b last:border-0">
+                  <td className="py-1.5 px-1 text-gray-800">{item.item_name}</td>
+                  <td className="py-1.5 px-1 text-center text-gray-600">{item.quantity} × {item.unit_price.toLocaleString()}</td>
+                  <td className="py-1.5 px-1 text-right font-medium">{(item.unit_price * item.quantity).toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot className="bg-[var(--kra-black)] text-white">
+              <tr>
+                <td colSpan={2} className="py-2 px-1 font-medium">Total</td>
+                <td className="py-2 px-1 text-right font-bold">KES {invoice.total_amount.toLocaleString()}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </Card>
+
+        {/* Status Display */}
+        <div className={`p-3 rounded-lg text-center text-sm font-medium ${
+          invoice.status === 'approved' || invoice.status === 'accepted' 
+            ? 'bg-green-100 text-green-800' 
+            : invoice.status === 'rejected' 
+              ? 'bg-red-100 text-red-800'
+              : 'bg-amber-100 text-amber-800'
+        }`}>
+          Status: {statusDisplay}
         </div>
 
         {/* Actions */}
-        <div className="space-y-4">
-            <div className="p-4 bg-gray-100 rounded-lg text-center text-gray-600">
-                Status: <span className="font-medium uppercase">{invoice.status || 'PENDING'}</span>
-            </div>
-
-            <Button variant="secondary" className="w-full border-dashed border-gray-300 text-gray-600 hover:bg-gray-50" onClick={() => alert('PDF Download Mock')}>
-                Download PDF
-            </Button>
-
-            <button 
-                onClick={() => router.back()}
-                className="w-full text-center text-blue-600 text-sm font-medium hover:underline py-2"
-            >
-                ← Go Back
-            </button>
+        <div className="grid grid-cols-2 gap-2">
+          <button 
+            onClick={() => alert('PDF download coming soon')} 
+            className="py-2 border border-dashed border-gray-300 rounded-lg text-gray-600 text-xs font-medium flex items-center justify-center gap-1"
+          >
+            <Download className="w-3.5 h-3.5" />Download
+          </button>
+          <button 
+            onClick={() => alert('View more details coming soon')} 
+            className="py-2 border border-gray-300 rounded-lg text-gray-600 text-xs font-medium flex items-center justify-center gap-1"
+          >
+            View More<ChevronRight className="w-3.5 h-3.5" />
+          </button>
         </div>
+
+        {/* Back Button */}
+        <button 
+          onClick={() => router.push(`/etims/buyer-initiated/buyer/invoices?status=${status}`)} 
+          className="w-full text-center text-[var(--kra-red)] text-xs font-medium py-2 flex items-center justify-center gap-1"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />Back to Invoices
+        </button>
       </div>
     </Layout>
   );
 }
 
-export default function BuyerInitiatedSellerView() {
+export default function BuyerInitiatedBuyerView() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center">Loading...</div>}>
-      <SellerViewContent />
+    <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center text-sm">Loading...</div>}>
+      <BuyerViewContent />
     </Suspense>
   );
 }

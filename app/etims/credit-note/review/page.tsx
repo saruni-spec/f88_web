@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Layout, Card, Button, TotalsCard } from '../../_components/Layout';
-import { getCreditNote, CreditNoteData, calculateTotals } from '../../_lib/store';
+import { getCreditNote, CreditNoteData, calculateTotals, getUserSession } from '../../_lib/store';
 import { Loader2 } from 'lucide-react';
-import { submitPartialCreditNote } from '../../../actions/etims';
+import { submitPartialCreditNote, sendWhatsAppDocument } from '../../../actions/etims';
 import { CreditNoteReason } from '../../_lib/definitions';
 
 const reasonLabels: Record<string, string> = {
@@ -53,6 +53,21 @@ export default function CreditNoteReview() {
       });
 
       if (result.success) {
+         // Send credit note PDF to user via WhatsApp
+         if (result.credit_note_pdf_url && creditNote.msisdn) {
+           const session = getUserSession();
+           const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+           // Calculate credit amount
+           const creditAmount = isFull 
+             ? creditNote.invoice.total 
+             : (creditNote.items || []).reduce((acc, { item, quantity }) => acc + (item.unitPrice * quantity), 0);
+           await sendWhatsAppDocument({
+             recipientPhone: creditNote.msisdn,
+             documentUrl: result.credit_note_pdf_url,
+             caption: `Dear ${session?.name || 'Valued Customer'},\n\nYour eTIMS credit note (${result.credit_note_ref || result.credit_note_id}) of KES ${creditAmount.toLocaleString()} has been successfully issued on ${today}.\n\nPlease find the attached credit note document for your records.\n\nThank you for using KRA eTIMS services.`,
+             filename: `eTIMS_Credit_Note_${result.credit_note_ref || today}.pdf`
+           });
+         }
          router.push('/etims/credit-note/success');
       } else {
          alert('Failed to submit credit note: ' + (result.error || result.message || 'Unknown error'));

@@ -33,7 +33,7 @@ function SellerViewContent() {
     if (!id || !phone) { setIsLoading(false); setError('Missing data'); return; }
     const loadInvoice = async () => {
       try {
-        const result = await fetchInvoices(phone);
+        const result = await fetchInvoices(phone, session?.name);
         if (result.success && result.invoices) {
           const found = result.invoices.find(inv => inv.reference === id || inv.invoice_id === id);
           if (found) setInvoice(found);

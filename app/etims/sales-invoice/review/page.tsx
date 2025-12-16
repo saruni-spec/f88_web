@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Layout, Card, Button, IdentityStrip } from '../../_components/Layout';
 import { getSalesInvoice, Invoice, getUserSession } from '../../_lib/store';
-import { submitInvoice } from '../../../actions/etims';
+import { submitInvoice, sendWhatsAppDocument } from '../../../actions/etims';
 import { Loader2 } from 'lucide-react';
 
 export default function SalesInvoiceReview() {
@@ -26,6 +26,7 @@ export default function SalesInvoiceReview() {
     
     // Get seller info from session
     const session = getUserSession();
+    console.log(session);
     if (session?.name) {
       setSellerName(session.name);
     } else if (session?.msisdn) {
@@ -64,10 +65,20 @@ export default function SalesInvoiceReview() {
       });
   
       if (result.success) {
+        // Send invoice PDF to user via WhatsApp
+        if (result.invoice_pdf_url && session.msisdn) {
+          const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+          await sendWhatsAppDocument({
+            recipientPhone: session.msisdn,
+            documentUrl: result.invoice_pdf_url,
+            caption: `Dear ${session.name || 'Valued Customer'},\n\nYour eTIMS sales invoice (${result.invoice_id}) of KES ${calculatedTotal.toLocaleString()} has been successfully created on ${today}.\n\nPlease find the attached invoice document for your records.\n\nThank you for using KRA eTIMS services.`,
+            filename: `eTIMS_Invoice_${result.invoice_id || today}.pdf`
+          });
+        }
         router.push('/etims/sales-invoice/success');
       } else {
         // Show friendly error message
-        setError('Could not submit invoice. Please check your details and try again.');
+        setError(result.error || 'Could not submit invoice. Please check your details and try again.');
       }
     } catch (err: any) {
       // Show friendly error message

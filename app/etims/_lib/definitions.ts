@@ -36,6 +36,8 @@ export interface InvoiceSubmissionResult {
   invoice_id?: string;
   message?: string;
   transaction_reference?: string;
+  invoice_pdf_url?: string;
+  invoice_preview_url?: string;
   error?: string;
 }
 
@@ -49,6 +51,8 @@ export interface FetchedInvoice {
   seller_name: string;
   created_at: string;
   rejection_reason?: string;
+  invoice_pdf_url?: string;
+  invoice_preview_url?: string;
   items: {
     item_name: string;
     quantity: number;
@@ -127,6 +131,8 @@ export interface SubmitCreditNoteRequest {
 export interface SubmitCreditNoteResult {
   success: boolean;
   credit_note_id?: string;
+  credit_note_ref?: string;
+  credit_note_pdf_url?: string;
   message?: string;
   error?: string;
 }
@@ -149,6 +155,7 @@ export interface SubmitBuyerInitiatedInvoiceResult {
   success: boolean;
   invoice_id?: string;
   reference?: string;
+  invoice_pdf_url?: string;
   message?: string;
   error?: string;
 }

@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { Layout, Card, Button } from '../../../_components/Layout';
 import { fetchInvoices } from '../../../../actions/etims';
 import { FetchedInvoice } from '../../../_lib/definitions';
-import { ChevronRight, Loader2, Phone, FileText, Square, CheckSquare } from 'lucide-react';
+import { Download, Eye, Loader2, Phone, FileText } from 'lucide-react';
 import { getUserSession } from '../../../_lib/store';
 
 function BuyerInvoicesContent() {
@@ -14,12 +14,12 @@ function BuyerInvoicesContent() {
   const statusFilter = searchParams.get('status') || 'pending';
   
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [userName, setUserName] = useState('');
   const [isPhoneSet, setIsPhoneSet] = useState(false);
   const [invoices, setInvoices] = useState<FetchedInvoice[]>([]);
   const [loading, setLoading] = useState(false);
   const [initializing, setInitializing] = useState(true);
   const [error, setError] = useState('');
-  const [selectedInvoices, setSelectedInvoices] = useState<Set<string>>(new Set());
 
   const getPageTitle = () => {
     switch (statusFilter) {
@@ -33,18 +33,19 @@ function BuyerInvoicesContent() {
     const session = getUserSession();
     if (session?.msisdn) {
       setPhoneNumber(session.msisdn);
+      setUserName(session.name || '');
       setIsPhoneSet(true);
-      fetchInvoicesData(session.msisdn);
+      fetchInvoicesData(session.msisdn, session.name);
     }
     setInitializing(false);
   }, []);
 
-  const fetchInvoicesData = async (phone: string) => {
+  const fetchInvoicesData = async (phone: string, name?: string) => {
     if (!phone.trim()) return;
     setLoading(true);
     setError('');
     try {
-      const result = await fetchInvoices(phone);
+      const result = await fetchInvoices(phone, name || userName);
       if (result.success && result.invoices) {
         let filtered = result.invoices;
         if (statusFilter === 'approved') filtered = result.invoices.filter(inv => inv.status === 'approved' || inv.status === 'accepted');
@@ -63,15 +64,19 @@ function BuyerInvoicesContent() {
   };
 
   const handleFetchInvoices = () => { if (phoneNumber) { setIsPhoneSet(true); fetchInvoicesData(phoneNumber); }};
-  const handleInvoiceClick = (invoice: FetchedInvoice) => {
+  
+  const handleViewInvoice = (invoice: FetchedInvoice) => {
     const invoiceId = invoice.invoice_id || invoice.reference;
     router.push(`/etims/buyer-initiated/buyer/view?id=${invoiceId}&phone=${encodeURIComponent(phoneNumber)}&status=${statusFilter}`);
   };
-  const toggleInvoiceSelection = (invoiceId: string, e: React.MouseEvent) => {
+
+  const handleDownloadInvoice = (invoice: FetchedInvoice, e: React.MouseEvent) => {
     e.stopPropagation();
-    const newSelected = new Set(selectedInvoices);
-    newSelected.has(invoiceId) ? newSelected.delete(invoiceId) : newSelected.add(invoiceId);
-    setSelectedInvoices(newSelected);
+    if (invoice.invoice_pdf_url) {
+      window.open(invoice.invoice_pdf_url, '_blank');
+    } else {
+      alert('Download URL not available for this invoice');
+    }
   };
 
   if (initializing) return <Layout title={getPageTitle()} onBack={() => router.push('/etims/buyer-initiated')}><div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin" /></div></Layout>;
@@ -102,50 +107,49 @@ function BuyerInvoicesContent() {
                 <p className="text-sm text-gray-500">No {statusFilter} invoices</p>
               </Card>
             ) : (
-              <>
-                {/* Bulk Actions for cancelled invoices */}
-                {statusFilter === 'pending' && selectedInvoices.size > 0 && (
-                  <div className="bg-gray-100 border border-gray-200 rounded-lg px-3 py-2 flex items-center justify-between">
-                    <span className="text-xs font-medium text-gray-700">{selectedInvoices.size} selected</span>
-                    <button className="px-2 py-1 bg-red-600 text-white text-xs rounded font-medium">Cancel</button>
-                  </div>
-                )}
-
-                {/* Invoice Table */}
-                <Card>
-                  <table className="w-full text-xs">
-                    <thead className="bg-gray-50">
-                      <tr className="border-b">
-                        {statusFilter === 'pending' && <th className="w-8 py-1.5"></th>}
-                        <th className="text-left py-1.5 px-1 font-medium text-gray-600">Invoice</th>
-                        <th className="text-right py-1.5 px-1 font-medium text-gray-600">Amount</th>
-                        <th className="w-6"></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {invoices.map((invoice, idx) => {
-                        const invoiceId = invoice.invoice_id || invoice.reference || String(idx);
-                        const isSelected = selectedInvoices.has(invoiceId);
-                        return (
-                          <tr key={invoiceId} onClick={() => handleInvoiceClick(invoice)} className="border-b last:border-0 hover:bg-gray-50 cursor-pointer">
-                            {statusFilter === 'pending' && (
-                              <td className="py-2 px-1" onClick={(e) => toggleInvoiceSelection(invoiceId, e)}>
-                                {isSelected ? <CheckSquare className="w-4 h-4 text-[var(--kra-red)]" /> : <Square className="w-4 h-4 text-gray-400" />}
-                              </td>
-                            )}
-                            <td className="py-2 px-1">
-                              <span className="font-medium text-gray-800">{invoice.reference || invoice.invoice_id || 'N/A'}</span>
-                              <span className="block text-[10px] text-gray-400">{invoice.seller_name || 'Unknown Seller'}</span>
-                            </td>
-                            <td className="py-2 px-1 text-right font-medium">{(invoice.total_amount || 0).toLocaleString()}</td>
-                            <td className="py-2 px-1"><ChevronRight className="w-4 h-4 text-gray-400" /></td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </Card>
-              </>
+              <Card>
+                <table className="w-full text-xs">
+                  <thead className="bg-gray-50">
+                    <tr className="border-b">
+                      <th className="text-left py-1.5 px-1 font-medium text-gray-600">Invoice</th>
+                      <th className="text-right py-1.5 px-1 font-medium text-gray-600">Amount</th>
+                      <th className="text-center py-1.5 px-1 font-medium text-gray-600">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {invoices.map((invoice, idx) => {
+                      const invoiceId = invoice.invoice_id || invoice.reference || String(idx);
+                      return (
+                        <tr key={invoiceId} className="border-b last:border-0 hover:bg-gray-50">
+                          <td className="py-2 px-1">
+                            <span className="font-medium text-gray-800">{invoice.reference || invoice.invoice_id || 'N/A'}</span>
+                            <span className="block text-[10px] text-gray-400">{invoice.seller_name || 'Unknown Seller'}</span>
+                          </td>
+                          <td className="py-2 px-1 text-right font-medium">{(invoice.total_amount || 0).toLocaleString()}</td>
+                          <td className="py-2 px-1">
+                            <div className="flex items-center justify-center gap-1">
+                              <button 
+                                onClick={(e) => handleDownloadInvoice(invoice, e)}
+                                className="p-1.5 bg-blue-50 hover:bg-blue-100 rounded text-blue-600"
+                                title="Download"
+                              >
+                                <Download className="w-3.5 h-3.5" />
+                              </button>
+                              <button 
+                                onClick={() => handleViewInvoice(invoice)}
+                                className="p-1.5 bg-gray-100 hover:bg-gray-200 rounded text-gray-600"
+                                title="View Details"
+                              >
+                                <Eye className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </Card>
             )}
           </>
         )}

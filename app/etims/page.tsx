@@ -4,7 +4,7 @@ import { Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FileText, FileMinus, UserCheck, LogOut } from 'lucide-react';
 import { Layout, Card } from './_components/Layout';
-import { clearSalesInvoice, clearCreditNote, clearBuyerInitiated, saveUserSession } from './_lib/store';
+import { clearSalesInvoice, clearCreditNote, clearBuyerInitiated, saveUserSession, getUserSession } from './_lib/store';
 
 function EtimsHomeContent() {
   const router = useRouter();
@@ -13,7 +13,14 @@ function EtimsHomeContent() {
 
   useEffect(() => {
     if (number) {
-      saveUserSession({ msisdn: number });
+      // Preserve existing session data (including name) if it exists
+      const existingSession = getUserSession();
+      if (existingSession && existingSession.msisdn === number) {
+        // Session already exists for this number, don't overwrite
+        return;
+      }
+      // Only save if no existing session or different number
+      saveUserSession({ msisdn: number, name: existingSession?.name });
     }
   }, [number]);
 

@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Layout, Card, Button } from '../../../_components/Layout';
-import { submitBuyerInitiatedInvoice } from '../../../../actions/etims';
+import { submitBuyerInitiatedInvoice, sendWhatsAppDocument } from '../../../../actions/etims';
 import { getBuyerInitiated, BuyerInitiatedInvoice, calculateTotals, getUserSession } from '../../../_lib/store';
 import { Loader2, Edit2, Send, Store } from 'lucide-react';
 
@@ -41,7 +41,19 @@ export default function BuyerInitiatedReview() {
         items: invoice.items.map(item => ({ item_name: item.name, taxable_amount: item.unitPrice, quantity: item.quantity }))
       });
 
-      if (result.success) router.push('/etims/buyer-initiated/buyer/success');
+      if (result.success) {
+        // Send invoice PDF to user via WhatsApp
+        if (result.invoice_pdf_url && session.msisdn) {
+          const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+          await sendWhatsAppDocument({
+            recipientPhone: session.msisdn,
+            documentUrl: result.invoice_pdf_url,
+            caption: `Dear ${session.name || 'Valued Customer'},\n\nYour buyer-initiated invoice (${result.reference || result.invoice_id}) of KES ${totals.total.toLocaleString()} to ${invoice.sellerName} has been successfully submitted on ${today}.\n\nPlease find the attached invoice document for your records.\n\nThank you for using KRA eTIMS services.`,
+            filename: `eTIMS_Buyer_Invoice_${result.reference || today}.pdf`
+          });
+        }
+        router.push('/etims/buyer-initiated/buyer/success');
+      }
       else setError(result.error || 'Submission failed');
     } catch (err: any) {
       setError(err.message || 'Error');

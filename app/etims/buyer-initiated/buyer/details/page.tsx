@@ -120,13 +120,13 @@ export default function BuyerInitiatedDetails() {
                 className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg" />
             </div>
             <div>
-              <label className="block text-[10px] text-gray-500 mb-1">Description <span className="text-gray-400">(optional - {description.length}/600)</span></label>
-              <textarea value={description} onChange={(e) => setDescription(e.target.value.slice(0, 600))} rows={2}
+              <label className="block text-[10px] text-gray-500 mb-1">Description <span className="text-red-500">*</span><span className="text-gray-400">({description.length}/600)</span></label>
+              <textarea required value={description} onChange={(e) => setDescription(e.target.value.slice(0, 600))} rows={2}
                 className="w-full px-2.5 py-1.5 text-sm border border-gray-300 rounded-lg resize-none" />
             </div>
             <div className="flex items-center gap-2 text-xs text-gray-500">
               <Calendar className="w-3.5 h-3.5" />
-              <span>Invoice Date: {invoiceDate}</span>
+              <span><b>Invoice Date: {invoiceDate} </b></span>
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div>

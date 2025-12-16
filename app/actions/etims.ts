@@ -179,6 +179,8 @@ export async function submitInvoice(
       invoice_id: response.data.invoice_no,
       message: response.data.message,
       transaction_reference: response.data.invoice_no,
+      invoice_pdf_url: response.data.invoice_pdf_url,
+      invoice_preview_url: response.data.invoice_preview_url,
       error: response.data.code !== 8 ? response.data.message : undefined
     };
   } catch (error) {
@@ -190,7 +192,7 @@ export async function submitInvoice(
 /**
  * Fetch buyer-initiated invoices by phone number
  */
-export async function fetchInvoices(phoneNumber: string): Promise<FetchInvoicesResult> {
+export async function fetchInvoices(phoneNumber: string, buyerName?: string): Promise<FetchInvoicesResult> {
   if (!phoneNumber || phoneNumber.trim() === '') {
     throw new Error('Phone number is required');
   }
@@ -254,7 +256,7 @@ export async function fetchInvoices(phoneNumber: string): Promise<FetchInvoicesR
           reference: reference,
           total_amount: amount,
           status: 'pending', // Default to pending for fetched lists usually
-          buyer_name: 'You', // Buyer is the current user
+          buyer_name: buyerName || 'Unknown', // Use passed buyer name or default
           seller_name: sellerName,
           created_at: new Date().toISOString(), // Mock date as it's not in the string
           items: [
@@ -358,17 +360,39 @@ export async function searchCreditNoteInvoice(
     };
   } catch (error: any) {
     console.error('Search credit note error:', error.response?.data || error.message);
+    
+    // Handle specific error codes from API
+    const errorCode = error.response?.data?.code;
+    const errorMessage = error.response?.data?.message;
+    
     if (error.response?.status === 404) {
       return {
         success: false,
         error: 'Invoice not found'
       };
     }
-    throw new Error(
-      error.response?.data?.message || 
-      error.response?.data?.error || 
-      'Failed to search invoice'
-    );
+    
+    // Code 15 = Credit Note already issued for this invoice
+    if (errorCode === 15) {
+      return {
+        success: false,
+        error: 'A credit note has already been fully issued for this invoice. No further credit notes can be created.'
+      };
+    }
+    
+    // Code 13 = Invalid Invoice Number
+    if (errorCode === 13) {
+      return {
+        success: false,
+        error: 'Invalid invoice number. Please check and try again.'
+      };
+    }
+    
+    // Return error response instead of throwing (to avoid 500s)
+    return {
+      success: false,
+      error: errorMessage || 'Failed to search invoice. Please try again.'
+    };
   }
 }
 
@@ -434,10 +458,14 @@ export async function submitPartialCreditNote(
 
     console.log('Submit credit note response:', JSON.stringify(response.data, null, 2));
 
+    // API returns code 12 for success
     return {
-      success: response.data.success !== false,
-      credit_note_id: response.data.credit_note_id || response.data.reference,
-      message: response.data.message || 'Credit note submitted successfully'
+      success: response.data.code === 12,
+      credit_note_id: response.data.credit_note_id || response.data.credit_note_ref,
+      credit_note_ref: response.data.credit_note_ref,
+      credit_note_pdf_url: response.data.credit_note_pdf_url,
+      message: response.data.message || 'Credit note submitted successfully',
+      error: response.data.code !== 12 ? response.data.message : undefined
     };
   } catch (error: any) {
     console.error('Submit credit note error:', error.response?.data || error.message);
@@ -554,6 +582,7 @@ export async function submitBuyerInitiatedInvoice(
       success: response.data.success !== false, // Some APIs return success: true/false, others implict success
       invoice_id: response.data.invoice_id || response.data.reference,
       reference: response.data.reference,
+      invoice_pdf_url: response.data.invoice_pdf_url,
       message: response.data.message || 'Invoice submitted to buyer successfully'
     };
   } catch (error: any) {
@@ -777,6 +806,92 @@ export async function verifyOTP(msisdn: string, otp: string): Promise<VerifyOTPR
     return { 
       success: false, 
       error: error.response?.data?.message || 'OTP verification failed' 
+    };
+  }
+}
+
+// ==================== WHATSAPP DOCUMENT SENDING ====================
+
+export interface SendWhatsAppDocumentParams {
+  recipientPhone: string; // The phone number to send to (current user's phone)
+  documentUrl: string;    // Public URL to the PDF document
+  caption: string;        // Message to accompany the document
+  filename: string;       // Filename for the document
+}
+
+export interface SendWhatsAppDocumentResult {
+  success: boolean;
+  messageId?: string;
+  error?: string;
+}
+
+/**
+ * Send a document (PDF) via WhatsApp to a user
+ * Used for sending invoices, credit notes, reports, etc.
+ */
+export async function sendWhatsAppDocument(
+  params: SendWhatsAppDocumentParams
+): Promise<SendWhatsAppDocumentResult> {
+  const { recipientPhone, documentUrl, caption, filename } = params;
+
+  // Validate required params
+  if (!recipientPhone || !documentUrl) {
+    return { success: false, error: 'Recipient phone and document URL are required' };
+  }
+
+  // Clean phone number - ensure format is 2547XXXXXXXX (no + symbol)
+  let cleanNumber = recipientPhone.trim().replace(/[^\d]/g, '');
+  if (cleanNumber.startsWith('0')) {
+    cleanNumber = '254' + cleanNumber.substring(1);
+  } else if (cleanNumber.startsWith('+')) {
+    cleanNumber = cleanNumber.substring(1);
+  }
+
+  // WhatsApp API configuration from environment variables
+  const token = process.env.WHATSAPP_ACCESS_TOKEN;
+  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+  
+  if (!token || !phoneNumberId) {
+    console.error('WhatsApp API credentials not configured');
+    return { success: false, error: 'WhatsApp sending not configured' };
+  }
+
+  const url = `https://crm.chatnation.co.ke/api/meta/v21.0/${phoneNumberId}/messages`;
+
+  const payload = {
+    messaging_product: "whatsapp",
+    recipient_type: "individual",
+    to: cleanNumber,
+    type: "document",
+    document: {
+      link: documentUrl,
+      caption: caption,
+      filename: filename
+    }
+  };
+
+  console.log('Sending WhatsApp document:', { to: cleanNumber, filename, documentUrl });
+
+  try {
+    const response = await axios.post(url, payload, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      timeout: 30000
+    });
+
+    console.log('WhatsApp document sent successfully:', response.data);
+
+    return {
+      success: true,
+      messageId: response.data.messages?.[0]?.id
+    };
+  } catch (error: any) {
+    console.error('Error sending WhatsApp document:', error.response?.data || error.message);
+    return {
+      success: false,
+      error: error.response?.data?.error?.message || 'Failed to send document via WhatsApp'
     };
   }
 }

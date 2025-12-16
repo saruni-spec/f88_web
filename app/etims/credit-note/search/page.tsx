@@ -41,8 +41,9 @@ function CreditNoteSearchContent() {
       const result = await searchCreditNoteInvoice(session.msisdn, invoiceNumber.trim());
       if (result.success && result.invoice) {
         // Business rule: Cannot create another partial credit note if one already exists
+        // But full credit notes are still allowed
         if (creditNoteType === 'partial' && result.hasPartialCreditNote) {
-          setError('This invoice already has a partial credit note. You cannot create another partial credit note for this invoice.');
+          setError('This invoice already has a partial credit note. Please select "Full" credit note type instead.');
           setLoading(false);
           return;
         }

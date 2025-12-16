@@ -25,29 +25,29 @@ export function Layout({ children, title, step, onBack, showMenu = true, showHea
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
+      {/* Header - KRA Dark Theme */}
       {showHeader && (
-        <div className="bg-blue-600 text-white sticky top-0 z-10 shadow-md">
-          <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
+        <div className="bg-[var(--kra-black)] text-white sticky top-0 z-10 shadow-md">
+          <div className="max-w-4xl mx-auto px-3 py-2.5 flex items-center justify-between">
+            <div className="flex items-center gap-2">
               {onBack && (
                 <button
                   onClick={onBack}
-                  className="p-2 hover:bg-blue-700 rounded-lg transition-colors"
+                  className="p-1.5 hover:bg-gray-800 rounded-lg transition-colors"
                   aria-label="Go back"
                 >
                   <ArrowLeft className="w-5 h-5" />
                 </button>
               )}
               <div>
-                <h1 className="text-lg font-medium">{title}</h1>
-                {step && <p className="text-sm text-blue-100">{step}</p>}
+                <h1 className="text-base font-medium">{title}</h1>
+                {step && <p className="text-xs text-gray-400">{step}</p>}
               </div>
             </div>
             {showMenu && (
               <button
                 onClick={handleMenuClick}
-                className="p-2 hover:bg-blue-700 rounded-lg transition-colors"
+                className="p-1.5 hover:bg-gray-800 rounded-lg transition-colors"
                 aria-label="Menu"
               >
                 <Menu className="w-5 h-5" />
@@ -57,8 +57,8 @@ export function Layout({ children, title, step, onBack, showMenu = true, showHea
         </div>
       )}
 
-      {/* Content */}
-      <div className="max-w-4xl mx-auto px-4 py-6">
+      {/* Content - Compact padding */}
+      <div className="max-w-4xl mx-auto px-3 py-3">
         {children}
       </div>
     </div>
@@ -67,7 +67,7 @@ export function Layout({ children, title, step, onBack, showMenu = true, showHea
 
 export function Card({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
-    <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-4 ${className}`}>
+    <div className={`bg-white rounded-lg shadow-sm border border-gray-200 p-3 ${className}`}>
       {children}
     </div>
   );
@@ -88,9 +88,9 @@ export function Button({
   disabled?: boolean;
   className?: string;
 }) {
-  const baseStyles = 'w-full py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+  const baseStyles = 'w-full py-2.5 px-4 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
   const variants = {
-    primary: 'bg-blue-600 text-white hover:bg-blue-700',
+    primary: 'bg-[var(--kra-red)] text-white hover:bg-[var(--kra-red-dark)]',
     secondary: 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300',
     danger: 'bg-red-600 text-white hover:bg-red-700',
   };
@@ -126,8 +126,8 @@ export function Input({
 }) {
   return (
     <div>
-      <label className="block text-sm text-gray-700 mb-2 font-medium">
-        {label} {required && <span className="text-red-600">*</span>}
+      <label className="block text-xs text-gray-600 mb-1 font-medium">
+        {label} {required && <span className="text-[var(--kra-red)]">*</span>}
       </label>
       <input
         type={type}
@@ -136,7 +136,7 @@ export function Input({
         placeholder={placeholder}
         required={required}
         disabled={disabled}
-        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--kra-red)] focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
       />
     </div>
   );
@@ -157,14 +157,14 @@ export function Select({
 }) {
   return (
     <div>
-      <label className="block text-sm text-gray-700 mb-2 font-medium">
-        {label} {required && <span className="text-red-600">*</span>}
+      <label className="block text-xs text-gray-600 mb-1 font-medium">
+        {label} {required && <span className="text-[var(--kra-red)]">*</span>}
       </label>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
         required={required}
-        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--kra-red)] focus:border-transparent"
       >
         <option value="">Select an option</option>
         {options.map((option) => (
@@ -182,20 +182,20 @@ export function TotalsCard({ subtotal, tax, total }: { subtotal: number; tax: nu
   
   return (
     <Card className="bg-gray-50">
-      <div className="space-y-2">
-        <div className="flex justify-between text-sm">
+      <div className="space-y-1">
+        <div className="flex justify-between text-xs">
           <span className="text-gray-600">Subtotal</span>
           <span className="text-gray-900">{formatCurrency(subtotal)}</span>
         </div>
         {tax > 0 && (
-          <div className="flex justify-between text-sm">
+          <div className="flex justify-between text-xs">
             <span className="text-gray-600">VAT (16%)</span>
             <span className="text-gray-900">{formatCurrency(tax)}</span>
           </div>
         )}
-        <div className="border-t pt-2 flex justify-between font-medium">
+        <div className="border-t pt-1 flex justify-between font-medium text-sm">
           <span className="text-gray-900">Total</span>
-          <span className="text-blue-600 text-lg">{formatCurrency(total)}</span>
+          <span className="text-[var(--kra-red)]">{formatCurrency(total)}</span>
         </div>
       </div>
     </Card>
@@ -204,11 +204,11 @@ export function TotalsCard({ subtotal, tax, total }: { subtotal: number; tax: nu
 
 export function IdentityStrip({ label, value }: { label: string; value: string }) {
   return (
-    <Card className="bg-blue-50 border-blue-200">
+    <div className="bg-gray-100 border border-gray-200 rounded-lg px-3 py-2">
       <div className="flex items-center justify-between">
-        <span className="text-sm text-gray-600">{label}</span>
-        <span className="text-blue-600 font-medium">{value}</span>
+        <span className="text-xs text-gray-500">{label}</span>
+        <span className="text-[var(--kra-red)] text-sm font-medium">{value}</span>
       </div>
-    </Card>
+    </div>
   );
 }

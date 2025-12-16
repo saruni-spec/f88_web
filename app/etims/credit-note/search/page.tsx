@@ -1,200 +1,123 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { Layout, Card, Input, Button, Select } from '../../_components/Layout';
-import { saveCreditNote, Invoice, getUserSession } from '../../_lib/store';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Layout, Card, Button } from '../../_components/Layout';
 import { searchCreditNoteInvoice } from '../../../actions/etims';
-import { Loader2, FileText, Search } from 'lucide-react';
+import { saveCreditNote, getUserSession, Invoice } from '../../_lib/store';
+import { FileText, Search, Loader2 } from 'lucide-react';
 
-const reasonOptions = [
-  { value: 'missing_quantity', label: 'Missing Quantity' },
-  { value: 'pricing_error', label: 'Pricing Error' },
-  { value: 'damaged_goods', label: 'Damaged Goods' },
-  { value: 'returned_goods', label: 'Returned Goods' },
-  { value: 'duplicate', label: 'Duplicate Invoice' },
-  { value: 'other', label: 'Other' },
-];
-
-export default function CreditNoteSearch() {
+function CreditNoteSearchContent() {
   const router = useRouter();
   const [invoiceNumber, setInvoiceNumber] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
   const [creditNoteType, setCreditNoteType] = useState<'partial' | 'full' | ''>('');
   const [reason, setReason] = useState('');
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [mounted, setMounted] = useState(false);
 
-  useEffect(() => {
-    const session = getUserSession();
-    if (session?.msisdn) {
-      setPhoneNumber(session.msisdn);
-    }
-  }, []);
+  const reasons = [
+    { value: 'goods_returned', label: 'Goods Returned' },
+    { value: 'pricing_error', label: 'Pricing Error' },
+    { value: 'quality_issue', label: 'Quality Issue' },
+    { value: 'partial_delivery', label: 'Partial Delivery' },
+    { value: 'other', label: 'Other' },
+  ];
+
+  useEffect(() => { setMounted(true); }, []);
 
   const handleSearch = async () => {
     setError('');
-    
-    if (!invoiceNumber.trim()) {
-      setError('Please enter an invoice number');
-      return;
-    }
-
-    if (!reason) {
-      setError('Please select a reason for the credit note');
-      return;
-    }
-
-    if (!creditNoteType) {
-      setError('Please select a credit note type (Partial or Full)');
-      return;
-    }
+    if (!invoiceNumber.trim()) { setError('Invoice number required'); return; }
+    if (!creditNoteType) { setError('Select credit note type'); return; }
+    if (!reason) { setError('Select a reason'); return; }
 
     setLoading(true);
-
     try {
-      const result = await searchCreditNoteInvoice(phoneNumber, invoiceNumber);
-      
+      const session = getUserSession();
+      if (!session?.msisdn) { setError('Session not found'); setLoading(false); return; }
+
+      const result = await searchCreditNoteInvoice(session.msisdn, invoiceNumber.trim());
       if (result.success && result.invoice) {
-        // Map API response to Store Invoice format
-        const apiInvoice = result.invoice;
-        const mappedInvoice: Invoice = {
-          id: apiInvoice.invoice_id || apiInvoice.invoice_no,
-          invoiceNumber: apiInvoice.invoice_no,
-          buyer: {
-            name: apiInvoice.buyer_name || 'Unknown Buyer',
-            pin: ''
-          },
-          items: (apiInvoice.items || []).map((item, idx) => ({
-             id: item.item_id || String(idx),
-             type: 'product',
-             name: item.item_name,
-             unitPrice: item.unit_price,
-             quantity: item.quantity
-          })),
-          total: apiInvoice.total_amount,
-          subtotal: apiInvoice.total_amount,
-          tax: 0,
-          date: new Date().toISOString().split('T')[0],
-          partialCreditUsed: false 
+        const invoice: Invoice = {
+          id: result.invoice.invoice_id || invoiceNumber,
+          invoiceNumber: result.invoice.invoice_no || invoiceNumber,
+          items: result.invoice.items?.map((item, i) => ({
+            id: String(i), name: item.item_name, type: 'product' as const,
+            unitPrice: item.unit_price, quantity: item.quantity
+          })) || [],
+          subtotal: result.invoice.total_amount, tax: 0, total: result.invoice.total_amount, date: new Date().toISOString()
         };
-
-        saveCreditNote({ 
-          invoice: mappedInvoice, 
-          msisdn: phoneNumber,
-          type: creditNoteType as 'partial' | 'full',
-          reason: reasonOptions.find(r => r.value === reason)?.label || reason
-        });
-
-        if (creditNoteType === 'full') {
-          router.push('/etims/credit-note/full');
-        } else {
-          router.push('/etims/credit-note/partial-select');
-        }
+        saveCreditNote({ invoice, msisdn: session.msisdn, type: creditNoteType, reason });
+        
+        if (creditNoteType === 'partial') router.push('/etims/credit-note/partial-select');
+        else router.push('/etims/credit-note/full-review');
       } else {
-        setError(result.error || 'Invoice not found. Please check the details and try again.');
+        setError(result.error || 'Invoice not found');
       }
-    } catch (err: any) {
-      setError('Unable to find invoice. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+    } catch (err: any) { setError(err.message || 'Search failed'); }
+    finally { setLoading(false); }
   };
 
+  if (!mounted) return null;
+
   return (
-    <Layout 
-      title=""
-      showHeader={false}
-      onBack={() => router.push('/etims')}
-    >
-      <div className="space-y-4">
-        {/* Header Banner */}
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-center">
-          <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <FileText className="w-8 h-8 text-white" />
+    <Layout title="Credit Note" showHeader={false} onBack={() => router.push('/etims')}>
+      <div className="space-y-3">
+        {/* Header */}
+        <div className="bg-[var(--kra-black)] rounded-xl p-4 text-white">
+          <div className="flex items-center gap-2 mb-1">
+            <FileText className="w-5 h-5" />
+            <h1 className="text-base font-semibold">Create Credit Note</h1>
           </div>
-          <h1 className="text-xl font-bold text-white mb-1">Search Invoice</h1>
-          <p className="text-blue-100 text-sm">Enter invoice details to create a credit note</p>
+          <p className="text-gray-400 text-xs">Issue a credit against an existing invoice</p>
         </div>
 
-        {/* Search Form */}
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Invoice Number</label>
-            <input
-              type="text"
-              value={invoiceNumber}
-              onChange={(e) => setInvoiceNumber(e.target.value)}
-              placeholder="e.g., KRASRN0000*/1"
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Enter your invoice number in any format (e.g., 001, INV-2024-001, KRASRN0000*/1)
-            </p>
+        {/* Invoice Number */}
+        <Card>
+          <label className="block text-xs text-gray-600 font-medium mb-1">Invoice Number <span className="text-red-500">*</span></label>
+          <div className="relative">
+            <input type="text" value={invoiceNumber} onChange={(e) => setInvoiceNumber(e.target.value.toUpperCase())}
+              placeholder="e.g. 1004" className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg pr-10" />
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           </div>
+        </Card>
 
-          {/* Credit Note Type */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Credit Note Type</label>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={() => setCreditNoteType('partial')}
-                className={`py-3 px-4 rounded-full border-2 font-medium transition-colors ${
-                  creditNoteType === 'partial'
-                    ? 'border-blue-600 bg-blue-600 text-white'
-                    : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
-                }`}
-              >
-                Partial
-              </button>
-              <button
-                onClick={() => setCreditNoteType('full')}
-                className={`py-3 px-4 rounded-full border-2 font-medium transition-colors ${
-                  creditNoteType === 'full'
-                    ? 'border-blue-600 bg-blue-600 text-white'
-                    : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
-                }`}
-              >
-                Full
-              </button>
-            </div>
+        {/* Credit Note Type */}
+        <Card>
+          <p className="text-xs text-gray-600 font-medium mb-2">Credit Note Type <span className="text-red-500">*</span></p>
+          <div className="grid grid-cols-2 gap-2">
+            <button onClick={() => setCreditNoteType('partial')}
+              className={`py-2.5 rounded-lg border-2 text-sm font-medium ${creditNoteType === 'partial' ? 'border-[var(--kra-red)] bg-red-50 text-[var(--kra-red)]' : 'border-gray-200 text-gray-600'}`}>
+              Partial
+            </button>
+            <button onClick={() => setCreditNoteType('full')}
+              className={`py-2.5 rounded-lg border-2 text-sm font-medium ${creditNoteType === 'full' ? 'border-[var(--kra-red)] bg-red-50 text-[var(--kra-red)]' : 'border-gray-200 text-gray-600'}`}>
+              Full
+            </button>
           </div>
+        </Card>
 
-          {/* Reason */}
-          <Select
-            label="Reason"
-            value={reason}
-            onChange={setReason}
-            options={reasonOptions}
-            required
-          />
+        {/* Reason */}
+        <Card>
+          <label className="block text-xs text-gray-600 font-medium mb-1">Reason <span className="text-red-500">*</span></label>
+          <select value={reason} onChange={(e) => setReason(e.target.value)}
+            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg">
+            <option value="">Select reason</option>
+            {reasons.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+          </select>
+        </Card>
 
-          {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm text-red-600">{error}</p>
-            </div>
-          )}
-        </div>
+        {error && <div className="p-2 bg-red-50 border border-red-200 rounded-lg"><p className="text-xs text-red-600">{error}</p></div>}
 
-        {/* Search Button */}
-        <button
-          onClick={handleSearch}
-          disabled={loading}
-          className="w-full py-4 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full font-medium flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
-        >
-          {loading ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              Searching...
-            </>
-          ) : (
-            <>
-              <Search className="w-5 h-5" />
-              Search Invoice
-            </>
-          )}
-        </button>
+        <Button onClick={handleSearch} disabled={loading}>
+          {loading ? <><Loader2 className="w-4 h-4 animate-spin inline mr-1" />Searching...</> : 'Search Invoice'}
+        </Button>
       </div>
     </Layout>
   );
+}
+
+export default function CreditNoteSearch() {
+  return <Suspense fallback={<div className="min-h-screen bg-gray-50 flex items-center justify-center text-sm">Loading...</div>}><CreditNoteSearchContent /></Suspense>;
 }

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Layout, Card, Button } from '../../../_components/Layout';
 import { submitBuyerInitiatedInvoice } from '../../../../actions/etims';
 import { getBuyerInitiated, BuyerInitiatedInvoice, calculateTotals, getUserSession } from '../../../_lib/store';
-import { Loader2, Edit2, Send, FileText, User, Store } from 'lucide-react';
+import { Loader2, Edit2, Send, Store } from 'lucide-react';
 
 export default function BuyerInitiatedReview() {
   const router = useRouter();
@@ -27,159 +27,104 @@ export default function BuyerInitiatedReview() {
   const handleSubmit = async () => {
     setIsSending(true);
     setError('');
-    
     try {
       const session = getUserSession();
-      if (!session?.msisdn) {
-        setError('User session not found. Please go back to home page.');
-        setIsSending(false);
-        return;
-      }
-  
-      if (!invoice || !invoice.items || !invoice.sellerPin) {
-        setError('Invalid invoice data: Missing items or Seller PIN');
-        setIsSending(false);
-        return;
-      }
+      if (!session?.msisdn) { setError('Session not found'); setIsSending(false); return; }
+      if (!invoice || !invoice.items || !invoice.sellerPin) { setError('Invalid data'); setIsSending(false); return; }
 
       const totals = calculateTotals(invoice.items);
-
       const result = await submitBuyerInitiatedInvoice({
         msisdn: session.msisdn,
         seller_pin: invoice.sellerPin,
         seller_msisdn: invoice.sellerPhone || '',
         total_amount: totals.total,
-        items: invoice.items.map(item => ({
-          item_name: item.name,
-          taxable_amount: item.unitPrice,
-          quantity: item.quantity
-        }))
+        items: invoice.items.map(item => ({ item_name: item.name, taxable_amount: item.unitPrice, quantity: item.quantity }))
       });
 
-      if (result.success) {
-        router.push('/etims/buyer-initiated/buyer/success');
-      } else {
-        setError(result.error || 'Failed to submit invoice');
-      }
+      if (result.success) router.push('/etims/buyer-initiated/buyer/success');
+      else setError(result.error || 'Submission failed');
     } catch (err: any) {
-      setError(err.message || 'An error occurred while submitting the invoice');
+      setError(err.message || 'Error');
     } finally {
       setIsSending(false);
     }
   };
 
-  if (!mounted || !invoice) {
-    return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Loading...</div>;
-  }
+  if (!mounted || !invoice) return <div className="min-h-screen bg-gray-50 flex items-center justify-center text-sm">Loading...</div>;
 
   const totals = calculateTotals(invoice.items || []);
 
   return (
-    <Layout 
-      title="Invoice Preview"
-      showHeader={false}
-      onBack={() => router.push('/etims/buyer-initiated/buyer/details')}
-    >
-      <div className="space-y-4">
+    <Layout title="Invoice Preview" showHeader={false} onBack={() => router.push('/etims/buyer-initiated/buyer/details')}>
+      <div className="space-y-3">
         {/* Header */}
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-5 text-white">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-              <FileText className="w-6 h-6" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold">Invoice Preview</h1>
-              <p className="text-blue-100 text-sm">Screen 4 of 4 - Final review</p>
-            </div>
+        <div className="bg-[var(--kra-black)] rounded-xl p-4 text-white">
+          <h1 className="text-base font-semibold">Invoice Preview</h1>
+          <p className="text-gray-400 text-xs">Step 4/4 - Final review</p>
+        </div>
+
+        {/* Seller */}
+        <div className="flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-2">
+          <Store className="w-4 h-4 text-gray-500" />
+          <div>
+            <p className="text-[10px] text-gray-500">SELLER</p>
+            <p className="text-sm font-medium text-gray-800">{invoice.sellerName}</p>
           </div>
         </div>
 
-        {/* Seller Info */}
-        <Card className="border-l-4 border-l-purple-500">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-              <Store className="w-5 h-5 text-purple-600" />
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 uppercase font-semibold">Seller</p>
-              <p className="text-gray-900 font-medium">{invoice.sellerName}</p>
-            </div>
-          </div>
+        {/* Items Table */}
+        <Card>
+          <table className="w-full text-xs">
+            <thead className="bg-gray-50">
+              <tr className="border-b">
+                <th className="text-left py-1.5 px-1 font-medium text-gray-600">Product</th>
+                <th className="text-center py-1.5 px-1 font-medium text-gray-600">Qty × Price</th>
+                <th className="text-right py-1.5 px-1 font-medium text-gray-600">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {invoice.items?.map((item) => (
+                <tr key={item.id} className="border-b last:border-0">
+                  <td className="py-1.5 px-1">
+                    <span className="text-gray-800">{item.name}</span>
+                    <span className="block text-[10px] text-gray-400">{item.type}</span>
+                  </td>
+                  <td className="py-1.5 px-1 text-center text-gray-600">{item.quantity} × {item.unitPrice.toLocaleString()}</td>
+                  <td className="py-1.5 px-1 text-right font-medium">{(item.unitPrice * item.quantity).toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot className="bg-[var(--kra-black)] text-white">
+              <tr>
+                <td colSpan={2} className="py-2 px-1 font-medium">Total Amount</td>
+                <td className="py-2 px-1 text-right font-bold">KES {totals.total.toLocaleString()}</td>
+              </tr>
+            </tfoot>
+          </table>
         </Card>
 
-        {/* Items Summary */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-          <div className="bg-gray-50 px-4 py-3 border-b border-gray-100">
-            <h3 className="text-gray-900 font-semibold">Items Summary</h3>
-          </div>
-          
-          {/* Table Header */}
-          <div className="grid grid-cols-3 gap-2 px-4 py-2 bg-gray-50 text-xs font-medium text-gray-500 uppercase">
-            <span>Product</span>
-            <span className="text-center">Qty × Price</span>
-            <span className="text-right">Total</span>
-          </div>
-
-          {/* Items */}
-          <div className="divide-y divide-gray-100">
-            {invoice.items?.map((item) => (
-              <div key={item.id} className="grid grid-cols-3 gap-2 px-4 py-3 items-center">
-                <div>
-                  <p className="text-gray-900 font-medium">{item.name}</p>
-                  <span className="text-xs text-gray-500">{item.type}</span>
-                </div>
-                <p className="text-sm text-gray-600 text-center">
-                  {item.quantity} × {item.unitPrice.toLocaleString()}
-                </p>
-                <p className="text-gray-900 font-medium text-right">
-                  {(item.unitPrice * item.quantity).toLocaleString()}
-                </p>
-              </div>
-            ))}
-          </div>
-
-          {/* Total */}
-          <div className="bg-gray-900 p-4 text-white">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400">Total Amount</span>
-              <span className="text-2xl font-bold">KES {totals.total.toLocaleString()}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Error Message */}
         {error && (
-          <div className="p-4 bg-red-50 border border-red-200 rounded-xl">
-            <p className="text-sm text-red-600">{error}</p>
+          <div className="p-2 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-xs text-red-600">{error}</p>
           </div>
         )}
 
-        {/* Actions */}
         {isSending ? (
-          <Card className="bg-blue-50 border-blue-200">
-            <div className="flex items-center justify-center gap-3 py-4">
-              <Loader2 className="w-6 h-6 text-blue-600 animate-spin" />
-              <p className="text-blue-900 font-medium">Sending to Seller...</p>
+          <Card className="bg-gray-100">
+            <div className="flex items-center justify-center gap-2 py-2">
+              <Loader2 className="w-4 h-4 animate-spin text-gray-600" />
+              <span className="text-sm text-gray-700">Sending...</span>
             </div>
           </Card>
         ) : (
-          <div className="space-y-3">
-            {/* Submit Button */}
-            <button
-              onClick={handleSubmit}
-              className="w-full py-4 bg-green-600 hover:bg-green-700 text-white rounded-xl font-medium flex items-center justify-center gap-2 transition-colors"
-            >
-              <Send className="w-5 h-5" />
-              Submit
+          <div className="space-y-2">
+            <button onClick={handleSubmit}
+              className="w-full py-2.5 bg-[var(--kra-green)] hover:bg-[var(--kra-green-dark)] text-white rounded-lg text-sm font-medium flex items-center justify-center gap-2">
+              <Send className="w-4 h-4" />Submit
             </button>
-
-            {/* Edit Button */}
-            <button
-              onClick={() => router.push('/etims/buyer-initiated/buyer/details')}
-              className="w-full py-4 border-2 border-gray-200 rounded-xl text-gray-700 font-medium flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors"
-            >
-              <Edit2 className="w-5 h-5" />
-              Edit
+            <button onClick={() => router.push('/etims/buyer-initiated/buyer/details')}
+              className="w-full py-2.5 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 flex items-center justify-center gap-1">
+              <Edit2 className="w-4 h-4" />Edit
             </button>
           </div>
         )}

@@ -105,7 +105,7 @@ function OTPContent() {
           </div>
           <div>
             <h1 className="text-lg font-bold text-gray-900">Registration Complete!</h1>
-            <p className="text-sm text-gray-500">Welcome to eTIMS, {name.split(' ')[0]}</p>
+            <p className="text-sm text-gray-500">Welcome to eTIMS, {name}</p>
           </div>
           <p className="text-xs text-gray-400">Redirecting to dashboard...</p>
         </div>

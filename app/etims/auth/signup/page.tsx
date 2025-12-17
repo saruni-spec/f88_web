@@ -120,7 +120,10 @@ function SignupContent() {
       // OTP verified - now register
       const result = await registerTaxpayer(idNumber, phoneNumber);
       
-      if (result.success) {
+      // Treat "ETIMS inactive" as success - user is registered, ETIMS will activate on first use
+      const isRegisteredButInactive = result.error?.toLowerCase().includes('etims inactive');
+      
+      if (result.success || isRegisteredButInactive) {
         const params = new URLSearchParams({
           phone: phoneNumber,
           name: userDetails?.name || '',
@@ -282,7 +285,7 @@ function SignupContent() {
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.toUpperCase().slice(0, 6))}
                 placeholder="Enter OTP"
-                className="w-full px-4 py-3 text-center text-xl font-bold tracking-widest border border-gray-300 rounded-lg"
+                className="w-full px-4 py-3 text-center text-xl tracking-widest border border-gray-300 rounded-lg"
                 maxLength={6}
               />
             </Card>
@@ -295,7 +298,7 @@ function SignupContent() {
 
             <div className="space-y-2">
               <Button onClick={handleVerifyAndRegister} disabled={loading || otp.length < 4}>
-                {loading ? <><Loader2 className="w-4 h-4 animate-spin inline mr-1" />Verifying...</> : 'Verify & Register'}
+                {loading ? <><Loader2 className="w-4 h-4 animate-spin inline mr-1" />Verifying...</> : 'Continue'}
               </Button>
               <button 
                 onClick={handleResendOTP} 

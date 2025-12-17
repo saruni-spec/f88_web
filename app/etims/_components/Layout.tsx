@@ -49,7 +49,7 @@ export function Layout({ children, title, step, onBack, showMenu = false, showHe
 
   const handleConnectAgent = () => {
     // WhatsApp number for eTIMS support (without + symbol)
-    const whatsappNumber = '254708427694';
+    const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
     const message = encodeURIComponent('Connect to agent');
     // Open WhatsApp with pre-filled message
     window.open(`https://wa.me/${whatsappNumber}?text=${message}`, '_blank');
@@ -57,7 +57,7 @@ export function Layout({ children, title, step, onBack, showMenu = false, showHe
 
   const handleMainMenu = () => {
     // WhatsApp number for eTIMS support (without + symbol)
-    const whatsappNumber = '254708427694';
+    const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
     const message = encodeURIComponent('Main menu');
     // Open WhatsApp with pre-filled message
     window.open(`https://wa.me/${whatsappNumber}?text=${message}`, '_blank');

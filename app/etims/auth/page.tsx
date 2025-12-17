@@ -7,7 +7,7 @@ import { checkUserStatus } from '../../actions/etims';
 import { saveUserSession } from '../_lib/store';
 import { Loader2, Phone } from 'lucide-react';
 
-const whatsappNumber = '254708427694';
+const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
 
 function AuthContent() {
   const router = useRouter();

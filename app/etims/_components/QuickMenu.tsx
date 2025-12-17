@@ -61,7 +61,7 @@ export function QuickMenu() {
  * WhatsApp Link Button - Opens WhatsApp with a pre-filled message
  */
 export function WhatsAppButton({ label = 'Open in WhatsApp' }: { label?: string }) {
-  const whatsappNumber = '254708427694';
+  const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
   const message = encodeURIComponent('Main menu');
   
   return (

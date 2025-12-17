@@ -38,20 +38,18 @@ function BuyerInvoicesContent() {
       fetchInvoicesData(session.msisdn, session.name);
     }
     setInitializing(false);
-  }, []);
+  }, [statusFilter]);
 
   const fetchInvoicesData = async (phone: string, name?: string) => {
     if (!phone.trim()) return;
     setLoading(true);
     setError('');
     try {
-      const result = await fetchInvoices(phone, name || userName);
+      // Map 'approved' to 'accepted' for API compatibility
+      const apiStatus = statusFilter === 'approved' ? 'accepted' : statusFilter as 'pending' | 'rejected' | 'accepted';
+      const result = await fetchInvoices(phone, name || userName, apiStatus);
       if (result.success && result.invoices) {
-        let filtered = result.invoices;
-        if (statusFilter === 'approved') filtered = result.invoices.filter(inv => inv.status === 'approved' || inv.status === 'accepted');
-        else if (statusFilter === 'rejected') filtered = result.invoices.filter(inv => inv.status === 'rejected');
-        else filtered = result.invoices.filter(inv => !inv.status || inv.status === 'pending');
-        setInvoices(filtered);
+        setInvoices(result.invoices);
       } else {
         setError(result.error || 'No invoices found');
         if (result.success) setInvoices([]);

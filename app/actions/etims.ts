@@ -198,8 +198,9 @@ export async function submitInvoice(
 
 /**
  * Fetch buyer-initiated invoices by phone number
+ * @param status - Optional filter: 'pending' | 'rejected' | 'accepted'
  */
-export async function fetchInvoices(phoneNumber: string, buyerName?: string): Promise<FetchInvoicesResult> {
+export async function fetchInvoices(phoneNumber: string, buyerName?: string, status?: 'pending' | 'rejected' | 'accepted'): Promise<FetchInvoicesResult> {
   if (!phoneNumber || phoneNumber.trim() === '') {
     return { success: false, invoices: [], error: 'Phone number is required' };
   }
@@ -214,11 +215,17 @@ export async function fetchInvoices(phoneNumber: string, buyerName?: string): Pr
     cleanNumber = '254' + cleanNumber;
   }
 
-  console.log('Fetching invoices for:', cleanNumber);
+  console.log('Fetching invoices for:', cleanNumber, 'with status:', status || 'all');
 
   try {
+    // Build URL with optional status query param
+    let url = `${BASE_URL}/buyer-initiated/fetch/${cleanNumber}`;
+    if (status) {
+      url += `?status=${status}`;
+    }
+
     const response = await axios.get(
-      `${BASE_URL}/buyer-initiated/fetch/${cleanNumber}`,
+      url,
       {
         headers: {
           'Content-Type': 'application/json',

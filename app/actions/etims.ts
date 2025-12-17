@@ -43,7 +43,7 @@ const getApiErrorMessage = (error: any, context: string = 'API'): string => {
   if (status === 401 || status === 403) {
     return 'Session expired. Please login again.';
   } else if (status === 404) {
-    return 'Record not found. Please check your details and try again.';
+    return 'Service temporarily unavailable. Please try again later.';
   } else if (status === 400) {
     return 'Invalid request. Please check your input and try again.';
   } else if (status === 500 || status === 502 || status === 503) {

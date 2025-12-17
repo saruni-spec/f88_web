@@ -26,7 +26,7 @@ export default function CreditNoteSuccess() {
             <div>
               <h2 className="text-green-900 text-lg font-medium mb-1">Credit Note Generated</h2>
               <p className="text-xs text-green-700">
-                Your eTIMS credit note has been created successfully
+               Your credit note has been created. We have delivered the invoice acknowledgement as a PDF to your WhatsApp and sent an SMS with a link to access the invoice.
               </p>
             </div>
           </div>

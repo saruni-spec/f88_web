@@ -151,11 +151,11 @@ function CreditNoteSearchContent() {
           {loading ? <><Loader2 className="w-4 h-4 animate-spin inline mr-1" />Searching...</> : 'Search Invoice'}
         </Button>
 
-         {/* Quick Menu */}
-                <div className="pt-2">
-                  <p className="text-xs text-gray-500 mb-2 text-center">Quick Actions</p>
-                  <QuickMenu />
-                </div>
+        {/* Quick Menu */}
+        <div className="pt-2">
+          <p className="text-xs text-gray-500 mb-2 text-center">Quick Actions</p>
+          <QuickMenu />
+        </div>
       </div>
     </Layout>
   );

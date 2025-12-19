@@ -38,8 +38,8 @@ function BuyerSuccessContent() {
               </h2>
               <p className={`text-sm ${isAccepted ? 'text-green-700' : 'text-red-700'}`}>
                 {isAccepted 
-                  ? 'The seller has been notified of your acceptance'
-                  : 'The seller has been notified of your rejection'}
+                  ? 'The buyer has been notified of your acceptance'
+                  : 'The buyer has been notified of your rejection'}
               </p>
             </div>
           </div>

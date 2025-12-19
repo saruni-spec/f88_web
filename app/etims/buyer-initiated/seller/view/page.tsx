@@ -124,9 +124,9 @@ function SellerViewContent() {
                 return (
                   <tr key={i} className="border-b last:border-0">
                     <td className="py-1.5 px-1 text-gray-800">{item.item_name}</td>
-                    <td className="py-1.5 px-1 text-right text-gray-600">{price.toLocaleString()}</td>
+                    <td className="py-1.5 px-1 text-right text-gray-600">{price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     <td className="py-1.5 px-1 text-center text-gray-600">{qty}</td>
-                    <td className="py-1.5 px-1 text-right font-medium">{(price * qty).toLocaleString()}</td>
+                    <td className="py-1.5 px-1 text-right font-medium">{(price * qty).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>
                 );
               })}
@@ -134,7 +134,7 @@ function SellerViewContent() {
             <tfoot className="bg-[var(--kra-black)] text-white">
               <tr>
                 <td colSpan={3} className="py-2 px-1 font-medium">Total</td>
-                <td className="py-2 px-1 text-right font-bold">KES {invoice.total_amount.toLocaleString()}</td>
+                <td className="py-2 px-1 text-right font-bold">KES {invoice.total_amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
               </tr>
             </tfoot>
           </table>
@@ -155,7 +155,7 @@ function SellerViewContent() {
                         const result = await sendWhatsAppDocument({
                           recipientPhone: phone || '',
                           documentUrl: invoice.invoice_pdf_url,
-                          caption: `Invoice ${invoice.reference || invoice.invoice_id}\nAmount: KES ${(invoice.total_amount || 0).toLocaleString()}\nSeller: ${invoice.seller_name || 'N/A'}`,
+                          caption: `Invoice ${invoice.reference || invoice.invoice_id}\nAmount: KES ${(invoice.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\nSeller: ${invoice.seller_name || 'N/A'}`,
                           filename: `Invoice_${invoice.reference || invoice.invoice_id || 'document'}.pdf`
                         });
                         if (result.success) {

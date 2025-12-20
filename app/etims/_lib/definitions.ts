@@ -170,6 +170,7 @@ export interface SubmitBuyerInitiatedInvoiceRequest {
 export interface SubmitBuyerInitiatedInvoiceResult {
   success: boolean;
   invoice_id?: string;
+  invoice_number?: string;
   reference?: string;
   invoice_pdf_url?: string;
   message?: string;

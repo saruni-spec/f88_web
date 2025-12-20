@@ -70,11 +70,11 @@ export default function BuyerInitiatedReview() {
           await sendWhatsAppDocument({
             recipientPhone: session.msisdn,
             documentUrl: result.invoice_pdf_url,
-            caption: `Dear ${session.name || 'Valued Customer'},\n\nYour buyer-initiated invoice (${result.reference || result.invoice_id}) of KES ${totals.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} to ${invoice.sellerName} has been successfully submitted on ${today}.\n\nPlease find the attached invoice document for your records.\n\nThank you for using KRA eTIMS services.`,
-            filename: `eTIMS_Buyer_Invoice_${result.reference || today}.pdf`
+            caption: `Dear ${session.name || 'Valued Customer'},\n\nYour buyer-initiated invoice (${result.invoice_number || result.reference || result.invoice_id}) of KES ${totals.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} to ${invoice.sellerName} has been successfully submitted on ${today}.\n\nPlease find the attached invoice document for your records.\n\nThank you for using KRA eTIMS services.`,
+            filename: `eTIMS_Buyer_Invoice_${result.invoice_number || result.reference || today}.pdf`
           });
         }
-        router.push(`/etims/buyer-initiated/buyer/success?invoice=${result.reference || result.invoice_id || ''}`);
+        router.push(`/etims/buyer-initiated/buyer/success?invoice=${result.invoice_number || result.reference || result.invoice_id || ''}`);
       }
       else setError(result.error || 'Submission failed');
     } catch (err: any) {

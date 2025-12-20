@@ -45,7 +45,7 @@ export default function BuyerInitiatedReview() {
       if (!invoice.items) { setError('Items not found'); setIsSending(false); return; }
       if (!invoice.sellerPin) { setError('Seller pin not found'); setIsSending(false); return; }
       if (!invoice.sellerName) { setError('Seller name not found'); setIsSending(false); return; }
-      if (!invoice.buyerName) { setError('Buyer name not found'); setIsSending(false); return; }
+     
 
       const totals = calculateTotals(invoice.items);
       const result = await submitBuyerInitiatedInvoice({
@@ -70,7 +70,7 @@ export default function BuyerInitiatedReview() {
           await sendWhatsAppDocument({
             recipientPhone: session.msisdn,
             documentUrl: result.invoice_pdf_url,
-            caption: `Dear ${session.name || 'Valued Customer'},\n\nYour buyer-initiated invoice (${result.reference || result.invoice_id}) of KES ${totals.total.toLocaleString()} to ${invoice.sellerName} has been successfully submitted on ${today}.\n\nPlease find the attached invoice document for your records.\n\nThank you for using KRA eTIMS services.`,
+            caption: `Dear ${session.name || 'Valued Customer'},\n\nYour buyer-initiated invoice (${result.reference || result.invoice_id}) of KES ${totals.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} to ${invoice.sellerName} has been successfully submitted on ${today}.\n\nPlease find the attached invoice document for your records.\n\nThank you for using KRA eTIMS services.`,
             filename: `eTIMS_Buyer_Invoice_${result.reference || today}.pdf`
           });
         }
@@ -147,15 +147,15 @@ export default function BuyerInitiatedReview() {
               {invoice.items?.map((item) => (
                 <tr key={item.id} className="border-b last:border-0">
                   <td className="py-1.5 px-1 text-gray-800">{item.name}</td>
-                  <td className="py-1.5 px-1 text-center text-gray-600">{item.quantity}   {item.unitPrice.toLocaleString()}</td>
-                  <td className="py-1.5 px-1 text-right font-medium">{(item.unitPrice * item.quantity).toLocaleString()}</td>
+                  <td className="py-1.5 px-1 text-center text-gray-600">{item.quantity}   {item.unitPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  <td className="py-1.5 px-1 text-right font-medium">{(item.unitPrice * item.quantity).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                 </tr>
               ))}
             </tbody>
             <tfoot className="bg-[var(--kra-black)] text-white">
               <tr>
                 <td colSpan={2} className="py-2 px-1 font-medium">Total Amount</td>
-                <td className="py-2 px-1 text-right font-bold">KES {totals.total.toLocaleString()}</td>
+                <td className="py-2 px-1 text-right font-bold">KES {totals.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
               </tr>
             </tfoot>
           </table>

@@ -155,11 +155,11 @@ function SellerViewContent() {
                         const result = await sendWhatsAppDocument({
                           recipientPhone: phone || '',
                           documentUrl: invoice.invoice_pdf_url,
-                          caption: `Invoice ${invoice.reference || invoice.invoice_id}\nAmount: KES ${(invoice.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\nSeller: ${invoice.seller_name || 'N/A'}`,
+                          caption: `Invoice Order *${invoice.reference || invoice.invoice_id}*\nAmount: KES *${(invoice.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}*\nSeller: *${invoice.seller_name || 'N/A'}*`,
                           filename: `Invoice_${invoice.reference || invoice.invoice_id || 'document'}.pdf`
                         });
                         if (result.success) {
-                          alert(`Invoice ${invoice.reference || invoice.invoice_id} sent to WhatsApp`);
+                          alert(`Invoice Order ${invoice.reference || invoice.invoice_id} sent to WhatsApp number ${phone}`);
                         } else {
                           alert('Failed to send: ' + (result.error || 'Unknown error'));
                         }

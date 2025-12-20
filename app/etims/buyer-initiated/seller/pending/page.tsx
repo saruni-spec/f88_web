@@ -89,12 +89,12 @@ function SellerPendingContent() {
       const result = await sendWhatsAppDocument({
         recipientPhone: phoneNumber,
         documentUrl: invoice.invoice_pdf_url,
-        caption: `Invoice ${invoice.invoice_number || invoice.reference || invoice.invoice_id}\nAmount: KES ${(invoice.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\nBuyer: ${invoice.buyer_name || 'N/A'}`,
+        caption: `Invoice Order *${invoice.invoice_number || invoice.reference || invoice.invoice_id}*\nAmount: KES *${(invoice.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}*\nBuyer: *${invoice.buyer_name || 'N/A'}*`,
         filename: `Invoice_${invoice.invoice_number || invoice.reference || invoice.invoice_id || 'document'}.pdf`
       });
 
       if (result.success) {
-        alert(`Invoice sent to WhatsApp (${phoneNumber})`);
+        alert(`Invoice Order ${invoice.invoice_number || invoice.reference || invoice.invoice_id} sent to WhatsApp (${phoneNumber})`);
       } else {
         alert('Failed to send: ' + (result.error || 'Unknown error'));
       }

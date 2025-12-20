@@ -89,12 +89,12 @@ function BuyerInvoicesContent() {
       const result = await sendWhatsAppDocument({
         recipientPhone: phoneNumber,
         documentUrl: invoice.invoice_pdf_url,
-        caption: `Invoice ${invoice.reference || invoice.invoice_id}\nAmount: KES ${(invoice.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}\nSeller: ${invoice.seller_name || 'N/A'}`,
-        filename: `Invoice_${invoice.reference || invoice.invoice_id || 'document'}.pdf`
+        caption: `Purchase Order *${invoice.invoice_number || invoice.reference || invoice.invoice_id}*\nAmount: KES *${(invoice.total_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}*\nSeller: *${invoice.seller_name || 'N/A'}*`,
+        filename: `Invoice_${invoice.invoice_number || invoice.reference || invoice.invoice_id || 'document'}.pdf`
       });
       
       if (result.success) {
-        alert(`Purchase Order ${invoice.reference || invoice.invoice_id} sent to WhatsApp`);
+        alert(`Purchase Order ${invoice.invoice_number || invoice.reference || invoice.invoice_id} sent to WhatsApp number ${phoneNumber}`);
       } else {
         alert('Failed to send: ' + (result.error || 'Unknown error'));
       }

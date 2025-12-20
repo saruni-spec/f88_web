@@ -77,7 +77,7 @@ export default function SalesInvoiceReview() {
           await sendWhatsAppDocument({
             recipientPhone: session.msisdn,
             documentUrl: result.invoice_pdf_url,
-            caption: `Dear ${session.name || 'Valued Customer'},\n\nYour sales invoice (${result.invoice_id}) of KES ${calculatedTotal.toLocaleString()} was issued on ${today}.\n\nThe Sales Invoice PDF is attached for your records.`,
+            caption: `Dear *${session.name || 'Valued Customer'}*,\n\nYour sales invoice (${result.invoice_id}) of KES *${calculatedTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}* was issued on ${today}.\n\nThe Sales Invoice PDF is attached for your records.`,
             filename: `eTIMS_Invoice_${result.invoice_id || today}.pdf`
           });
         }
@@ -142,13 +142,13 @@ export default function SalesInvoiceReview() {
                       <span className="text-gray-900 font-medium text-xs">{item.name}</span>
                     </td>
                     <td className="text-right py-2 text-xs text-gray-700 whitespace-nowrap">
-                      {item.unitPrice.toLocaleString()}
+                      {item.unitPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                     <td className="text-center py-2 text-xs text-gray-700">
                       {item.quantity}
                     </td>
                     <td className="text-right py-2 text-xs text-gray-900 font-medium whitespace-nowrap">
-                      {(item.unitPrice * item.quantity).toLocaleString()}
+                      {(item.unitPrice * item.quantity).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                   </tr>
                 ))}
@@ -156,7 +156,7 @@ export default function SalesInvoiceReview() {
               <tfoot className="bg-[var(--kra-black)] text-white">
                 <tr>
                   <td colSpan={2} className="py-2 px-1 font-medium text-sm">Total</td>
-                  <td colSpan={2} className="py-2 px-1 text-right font-bold text-sm">KES {invoice.total?.toLocaleString()}</td>
+                  <td colSpan={2} className="py-2 px-1 text-right font-bold text-sm">KES {invoice.total?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                 </tr>
               </tfoot>
             </table>

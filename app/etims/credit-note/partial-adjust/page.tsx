@@ -111,6 +111,8 @@ export default function CreditNotePartialAdjust() {
                 inputMode="decimal"
                 step="0.01" 
                 value={displayQty} 
+                max={maxQty}
+                min={0}
                 onChange={(e) => handleQtyChange(item.id, e.target.value)} 
                 onBlur={() => handleQtyBlur(item.id)}
                 className="w-full px-3 py-3 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--kra-red)] focus:border-transparent outline-none transition-all"

@@ -30,6 +30,7 @@ export interface InvoiceSubmissionRequest {
     item_name: string;
     taxable_amount: number;
     quantity: number;
+    total_amount?: number;
   }[];
 }
 
@@ -166,6 +167,7 @@ export interface SubmitBuyerInitiatedInvoiceRequest {
     item_name: string;
     taxable_amount: number;
     quantity: number;
+    total_amount?: number;
   }[];
 }
 

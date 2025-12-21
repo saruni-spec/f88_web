@@ -63,7 +63,8 @@ export default function SalesInvoiceReview() {
         items: invoice.items.map(item => ({
           item_name: item.name,
           taxable_amount: item.unitPrice,
-          quantity: item.quantity
+          quantity: item.quantity,
+          total_amount: item.unitPrice * item.quantity
         }))
       });
   

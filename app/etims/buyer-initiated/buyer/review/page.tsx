@@ -54,7 +54,7 @@ export default function BuyerInitiatedReview() {
         seller_msisdn: invoice.sellerPhone || '',
         total_amount: totals.total,
         seller_name: invoice.sellerName,
-        items: invoice.items.map(item => ({ item_name: item.name, taxable_amount: item.unitPrice, quantity: item.quantity }))
+        items: invoice.items.map(item => ({ item_name: item.name, taxable_amount: item.unitPrice, quantity: item.quantity, total_amount: item.unitPrice * item.quantity }))
       });
 
       if (result.success) {

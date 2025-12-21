@@ -58,9 +58,11 @@ export default function CreditNoteReview() {
            const session = getUserSession();
            const today = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
            // Calculate credit amount
-           const creditAmount = isFull 
-             ? creditNote.invoice.total 
-             : (creditNote.items || []).reduce((acc, { item, quantity }) => acc + (item.unitPrice * quantity), 0);
+           const calculatedTotals = isFull
+             ? { total: creditNote.invoice!.total }
+             : calculateTotals((creditNote.items || []).map(({ item, quantity }) => ({ ...item, quantity })));
+           
+           const creditAmount = calculatedTotals.total;
 
 
 //              Dear [Full Name],
@@ -70,7 +72,7 @@ export default function CreditNoteReview() {
            await sendWhatsAppDocument({
              recipientPhone: creditNote.msisdn,
              documentUrl: result.credit_note_pdf_url,
-             caption: `Dear *${session?.name || 'Valued Customer'}*,\n\nYour credit note *(${result.credit_note_ref || result.credit_note_id})* of KES *${creditAmount.toLocaleString()}* was issued on *${today}*\n\nThe credit note PDF is attached for your records.`,
+             caption: `Dear *${session?.name || 'Valued Customer'}*,\n\nYour credit note *${result.credit_note_ref || result.credit_note_id}* of KES *${creditAmount.toLocaleString()}* was issued on *${today}*\n\nThe credit note PDF is attached for your records.`,
              filename: `eTIMS_Credit_Note_${result.credit_note_ref || today}.pdf`
            });
          }

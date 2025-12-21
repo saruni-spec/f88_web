@@ -119,7 +119,8 @@ This document provides an overview of all Postman collections in this directory 
 |----------|--------|-------------|
 | `/api/ussd/pin-registration` | POST | Register for KRA PIN |
 | `/api/ussd/init` | POST | Initialize USSD service |
-| `/api/ussd/id-lookup` | POST | Lookup taxpayer by ID |
+| `/api/ussd/id-lookup` | POST | Lookup taxpayer by ID (New: Returns YOB) |
+| `/api/ussd/reset-account` | POST | Reset account phone number for eTIMS |
 | `/api/ussd/register-tax-payer` | POST | Register taxpayer for USSD |
 
 ### eTIMS Invoicing

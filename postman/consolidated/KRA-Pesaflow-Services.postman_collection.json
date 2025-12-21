@@ -278,6 +278,76 @@
                     }
                 },
                 {
+                    "name": "ID Lookup (New)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "x-source-for",
+                                "value": "whatsapp"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"id_number\": \"25865669\",\n    \"msisdn\": \"254726898688\"\n}"
+                        },
+                        "url": {
+                            "raw": "https://kratest.pesaflow.com/api/ussd/id-lookup",
+                            "protocol": "https",
+                            "host": [
+                                "kratest",
+                                "pesaflow",
+                                "com"
+                            ],
+                            "path": [
+                                "api",
+                                "ussd",
+                                "id-lookup"
+                            ]
+                        },
+                        "description": "New ID lookup endpoint returning YOB for validation."
+                    }
+                },
+                {
+                    "name": "Reset Account",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "x-forwarded-for",
+                                "value": "triple_2_ussd"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"msisdn\": \"254726898688\"\n}"
+                        },
+                        "url": {
+                            "raw": "https://kratest.pesaflow.com/api/ussd/reset-account",
+                            "protocol": "https",
+                            "host": [
+                                "kratest",
+                                "pesaflow",
+                                "com"
+                            ],
+                            "path": [
+                                "api",
+                                "ussd",
+                                "reset-account"
+                            ]
+                        },
+                        "description": "Resets the phone number for eTIMS services."
+                    }
+                },
+                {
                     "name": "Register Taxpayer for USSD",
                     "request": {
                         "method": "POST",

@@ -787,9 +787,6 @@ export async function lookupById(idNumber: string, phoneNumber: string, yearOfBi
 
     console.log('ID lookup response:', JSON.stringify(response.data, null, 2));
 
-    // Response validation
-    // Example: {"code":3,"id_number":"25865669","message":"Valid ID Number","name":"STANSLAUS JONAH WEPUNDI","pin":"A005655394M","yob":"1988"}
-    
     // Check if we got a valid response with data
     if (response.data && response.data.name && response.data.pin) {
       
@@ -800,7 +797,7 @@ export async function lookupById(idNumber: string, phoneNumber: string, yearOfBi
       if (returnedYob !== yearOfBirth.trim()) {
         return {
           success: false,
-          error: `Year of birth mismatch. Entered: ${yearOfBirth}, Record: ${returnedYob}`
+          error: `Year of birth mismatch. Entered: ${yearOfBirth}`
         };
       }
 
@@ -1142,8 +1139,8 @@ export async function sendBuyerInvoiceAlert(
     to: cleanNumber,
     type: "template",
     template: {
-      name: "alert_for_invoice_buyer",
-      language: { code: "en" },
+      name: "inoice_alert_buyer",
+      language: { code: "en",policy: "deterministic" },
       components: [
         {
           type: "body",

@@ -854,7 +854,7 @@ export async function registerTaxpayer(idNumber: string, msisdn: string): Promis
       // Send WhatsApp notification
       await sendWhatsAppMessage({
         recipientPhone: cleanNumber,
-        message: "Dear Customer, eTIMS registration is only allowed for non-VAT registered taxpayers."
+        message: "Dear Customer,registration is only allowed for non-VAT registered taxpayers."
       });
       
       return { success: false, error: 'Registration is only allowed for people without VAT' };

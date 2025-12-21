@@ -1204,7 +1204,7 @@ export async function sendBuyerInitiatedInvoiceAlert(
     to: cleanNumber,
     type: "template",
     template: {
-      name: "buyer_initiated_invoice_alert_for_seller",
+      name: "alert_seller_invoice_buyer_initiated",
       language: { code: "en",policy: "deterministic" },
       components: [
         {

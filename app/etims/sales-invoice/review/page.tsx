@@ -77,7 +77,7 @@ export default function SalesInvoiceReview() {
           await sendWhatsAppDocument({
             recipientPhone: session.msisdn,
             documentUrl: result.invoice_pdf_url,
-            caption: `Dear *${session.name || 'Valued Customer'}*,\n\nYour sales invoice (${result.invoice_id}) of KES *${calculatedTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}* was issued on ${today}.\n\nThe Sales Invoice PDF is attached for your records.`,
+            caption: `Dear *${session.name || 'Valued Customer'}*,\n\nYour sales invoice *${result.invoice_id}* of KES *${calculatedTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}* was issued on *${today}*\n\nThe Sales Invoice PDF is attached for your records.`,
             filename: `eTIMS_Invoice_${result.invoice_id || today}.pdf`
           });
         }

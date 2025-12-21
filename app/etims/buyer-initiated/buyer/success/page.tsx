@@ -12,6 +12,8 @@ function BuyerInitiatedSuccessContent() {
   const searchParams = useSearchParams();
   const invoiceNo = searchParams.get('invoice') || '';
 
+  const sellerName = searchParams.get('seller') || '';
+  
   const handleCreateAnother = () => {
     clearBuyerInitiated();
     router.push('/etims/buyer-initiated/buyer/create');
@@ -32,7 +34,7 @@ function BuyerInitiatedSuccessContent() {
               <p className="text-xs text-green-700">
                 Your invoice {invoiceNo && (
                 <span className="font-semibold text-green-800">[{invoiceNo}]</span>
-              )} has been created and sent to the seller. We have delivered the invoice acknowledgement as a PDF to your WhatsApp.
+              )} has been successfully created and sent to {sellerName ? <span className="font-semibold text-green-800">[{sellerName}]</span> : 'the seller'}. We have delivered the invoice acknowledgement as a PDF to your WhatsApp.
               </p>
             </div>
           </div>

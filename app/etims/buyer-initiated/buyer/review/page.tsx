@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Layout, Card } from '../../../_components/Layout';
-import { submitBuyerInitiatedInvoice, sendWhatsAppDocument } from '../../../../actions/etims';
+import { submitBuyerInitiatedInvoice, sendWhatsAppDocument, sendBuyerInitiatedInvoiceAlert } from '../../../../actions/etims';
 import { saveBuyerInitiated, getBuyerInitiated, BuyerInitiatedInvoice, calculateTotals, getUserSession } from '../../../_lib/store';
 import { Loader2, Edit2, Send, Store, Check, X } from 'lucide-react';
 
@@ -70,11 +70,23 @@ export default function BuyerInitiatedReview() {
           await sendWhatsAppDocument({
             recipientPhone: session.msisdn,
             documentUrl: result.invoice_pdf_url,
-            caption: `Dear ${session.name || 'Valued Customer'},\n\nYour buyer-initiated invoice (${result.invoice_number || result.reference || result.invoice_id}) of KES ${totals.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} to ${invoice.sellerName} has been successfully submitted on ${today}.\n\nPlease find the attached invoice document for your records.\n\nThank you for using KRA eTIMS services.`,
+            caption: `Dear *${session.name || 'Valued Customer'}*,\n\nYour buyer-initiated invoice *${result.invoice_number || result.reference || result.invoice_id}* of KES *${totals.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}* to *${invoice.sellerName}* has been successfully submitted on *${today}*\n\nPlease find the attached invoice document for your records.\n\nThank you for using KRA eTIMS services.`,
             filename: `eTIMS_Buyer_Invoice_${result.invoice_number || result.reference || today}.pdf`
           });
         }
-        router.push(`/etims/buyer-initiated/buyer/success?invoice=${result.invoice_number || result.reference || result.invoice_id || ''}`);
+        
+        // Send notification to seller
+        if (invoice.sellerPhone) {
+          await sendBuyerInitiatedInvoiceAlert(
+            invoice.sellerPhone,
+            invoice.sellerName,
+            session.name || 'Valued Customer',
+            `KES ${totals.total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+            result.invoice_number || result.reference || result.invoice_id || 'N/A'
+          );
+        }
+
+        router.push(`/etims/buyer-initiated/buyer/success?invoice=${result.invoice_number || result.reference || result.invoice_id || ''}&seller=${encodeURIComponent(invoice.sellerName)}`);
       }
       else setError(result.error || 'Submission failed');
     } catch (err: any) {

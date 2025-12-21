@@ -24,7 +24,7 @@ function SignupSuccessContent() {
         const userName = name || session?.name || 'User';
         
         if (userPhone && !messageSent) {
-          const message = `Dear ${userName},\n\nYou have successfully registered for eTIMS.`;
+          const message = `Dear *${userName}*,\n\nYou have successfully registered for eTIMS.`;
           
           const result = await sendWhatsAppMessage({
             recipientPhone: userPhone,

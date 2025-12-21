@@ -1161,6 +1161,67 @@ export async function sendBuyerInvoiceAlert(
     });
     return { success: true };
   } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * Send template message to seller when a buyer-initiated invoice is created
+ */
+export async function sendBuyerInitiatedInvoiceAlert(
+  recipientPhone: string,
+  sellerName: string,
+  buyerName: string,
+  amount: string,
+  invoiceNumber: string
+): Promise<{ success: boolean; error?: string }> {
+  
+  if (!recipientPhone) return { success: false, error: 'Recipient phone required' };
+
+  // Clean phone number
+  let cleanNumber = recipientPhone.trim().replace(/[^\d]/g, '');
+  if (cleanNumber.startsWith('0')) cleanNumber = '254' + cleanNumber.substring(1);
+  else if (cleanNumber.startsWith('+')) cleanNumber = cleanNumber.substring(1);
+
+  const token = process.env.WHATSAPP_ACCESS_TOKEN;
+  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
+  
+  if (!token || !phoneNumberId) {
+    console.error('WhatsApp credentials missing');
+    return { success: false, error: 'Configuration error' };
+  }
+
+  const url = `https://crm.chatnation.co.ke/api/meta/v21.0/${phoneNumberId}/messages`;
+
+  const payload = {
+    messaging_product: "whatsapp",
+    recipient_type: "individual",
+    to: cleanNumber,
+    type: "template",
+    template: {
+      name: "buyer_initiated_invoice_alert_for_seller",
+      language: { code: "en",policy: "deterministic" },
+      components: [
+        {
+          type: "body",
+          parameters: [
+            { type: "text", text: sellerName || "Seller" },
+            { type: "text", text: buyerName || "Buyer" },
+            { type: "text", text: amount },
+            { type: "text", text: invoiceNumber }
+          ]
+        }
+      ]
+    }
+  };
+
+  try {
+    await axios.post(url, payload, {
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      timeout: 10000
+    });
+    return { success: true };
+  } catch (error: any) {
     console.error('WhatsApp template error:', error.response?.data || error.message);
     return { success: false, error: error.message };
   }

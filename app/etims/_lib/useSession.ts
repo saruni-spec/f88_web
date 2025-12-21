@@ -2,7 +2,7 @@
 
 import { useEffect, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { getUserSession, isSessionValid, refreshSession, clearUserSession } from './store';
+import { getUserSession, isSessionValid, refreshSession, clearUserSession, getKnownPhone } from './store';
 
 // Pages that don't require authentication
 const PUBLIC_PATHS = ['/etims/auth', '/etims/auth/login', '/etims/auth/signup', '/etims/auth/otp'];
@@ -21,7 +21,7 @@ export function useSessionManager() {
     if (!isSessionValid()) {
       // Get msisdn before clearing session so user can easily re-login
       const session = getUserSession();
-      const msisdn = session?.msisdn;
+      const msisdn = session?.msisdn || getKnownPhone();
       clearUserSession();
       
       // Redirect with phone number preserved if available

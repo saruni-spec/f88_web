@@ -121,7 +121,9 @@ export const clearBuyerInitiated = () => {
 };
 
 // User Session Store
+// User Session Store
 const USER_SESSION_KEY = 'etims_user_session';
+const KNOWN_PHONE_KEY = 'etims_known_phone';
 const SESSION_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
 
 export interface UserSession {
@@ -131,6 +133,16 @@ export interface UserSession {
   lastActive: number; // timestamp
 }
 
+export const saveKnownPhone = (phone: string) => {
+  if (typeof window === 'undefined' || !phone) return;
+  localStorage.setItem(KNOWN_PHONE_KEY, phone);
+};
+
+export const getKnownPhone = (): string | null => {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem(KNOWN_PHONE_KEY);
+};
+
 export const saveUserSession = (data: Omit<UserSession, 'lastActive'>) => {
   if (typeof window === 'undefined') return;
   const session: UserSession = {
@@ -138,6 +150,9 @@ export const saveUserSession = (data: Omit<UserSession, 'lastActive'>) => {
     lastActive: Date.now()
   };
   sessionStorage.setItem(USER_SESSION_KEY, JSON.stringify(session));
+  if (data.msisdn) {
+    saveKnownPhone(data.msisdn);
+  }
 };
 
 export const refreshSession = () => {

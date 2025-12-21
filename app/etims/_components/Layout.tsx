@@ -4,7 +4,7 @@ import { ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Menu, Home, LogOut, Headphones } from 'lucide-react';
 import { useSessionManager } from '../_lib/useSession';
-import { clearUserSession } from '../_lib/store';
+import { clearUserSession, getKnownPhone } from '../_lib/store';
 
 interface LayoutProps {
   children: ReactNode;
@@ -33,17 +33,21 @@ export function Layout({ children, title, step, onBack, showMenu = false, showHe
     if (confirm('Are you sure you want to logout?')) {
       // Get msisdn before clearing so user can easily re-login
       const session = typeof window !== 'undefined' ? sessionStorage.getItem('etims_user_session') : null;
-      const msisdn = session ? JSON.parse(session)?.msisdn : null;
+      const msisdn = (session ? JSON.parse(session)?.msisdn : null) || getKnownPhone();
       
       clearUserSession();
       sessionStorage.clear();
       
       // Redirect with phone number preserved if available
-      if (msisdn) {
-        router.push(`/etims/auth?number=${encodeURIComponent(msisdn)}`);
-      } else {
-        router.push('/etims/auth');
-      }
+      // if (msisdn) {
+      //   router.push(`/etims/auth?number=${encodeURIComponent(msisdn)}`);
+      // } else {
+      //   router.push('/etims/auth');
+      // }
+      const whatsappNumber = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER;
+      const message = encodeURIComponent('Connect to agent');
+      // Open WhatsApp with pre-filled message
+      window.open(`https://wa.me/${whatsappNumber}?text=${message}`, '_blank');
     }
   };
 

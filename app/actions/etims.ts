@@ -161,6 +161,8 @@ export async function submitInvoice(
     }
   }
 
+  request.source = 'whatsapp';
+
   console.log('Submitting invoice:', JSON.stringify(request, null, 2));
 
   try {
@@ -762,7 +764,8 @@ export async function submitBuyerInitiatedInvoice(
         seller_msisdn: cleanSellerNumber || undefined,
         total_amount: request.total_amount,
         items: request.items,
-        supplier_name:request.seller_name
+        supplier_name:request.seller_name,
+        source: 'whatsapp'
       },
       {
         headers: {

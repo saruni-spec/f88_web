@@ -26,6 +26,7 @@ export interface InvoiceSubmissionRequest {
   customer_name?: string;
   customer_phone?: string;
   total_amount: number;
+  source?: string;
   items: {
     item_name: string;
     taxable_amount: number;

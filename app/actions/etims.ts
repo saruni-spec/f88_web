@@ -1058,7 +1058,7 @@ export async function verifyOTP(msisdn: string, otp: string): Promise<VerifyOTPR
       (await cookies()).set('etims_auth_token', response.data.token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        maxAge: 60 * 60 * 24 * 7, // 1 week
+        maxAge: 60 * 60 * 24 * 7, 
         path: '/'
       });
     }

@@ -955,7 +955,10 @@ export async function registerTaxpayer(idNumber: string, msisdn: string): Promis
       `${BASE_URL}/register-tax-payer`,
       { id_number: idNumber.trim(), msisdn: cleanNumber },
       {
-        headers: await getAuthHeaders(),
+        headers: {
+          ...(await getAuthHeaders()),
+          'x-source-for': 'whatsapp'
+        },
         timeout: 30000
       }
     );

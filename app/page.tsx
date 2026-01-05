@@ -1,7 +1,7 @@
 "use client";
 import { createContext, useContext, useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { X, Upload } from 'lucide-react';
+import { X, Upload, AlertCircle, Phone } from 'lucide-react';
 import { 
   getDeclaration, 
   submitPassengerInfo, 
@@ -12,7 +12,8 @@ import {
   searchHsCodes,
   getEntryPoints,
   getCurrencies,
-  sendWhatsappNotification
+  sendWhatsappNotification,
+  initializeDeclaration
 } from './actions/customs';
 
 // Form Context
@@ -26,11 +27,14 @@ const useFormContext = () => {
 
 const FormProvider = ({ children }: { children: React.ReactNode }) => {
   const searchParams = useSearchParams();
-  const refNo = searchParams.get('ref_no');
+  const urlRefNo = searchParams.get('ref_no'); // Rename to distinguish from state refNo
   const phone = searchParams.get('msisdn') || searchParams.get('phone');
 
+  // Logic: If ref_no exists in URL, start at Step 1, otherwise Step 0 (Landing)
+  const initialStep = urlRefNo ? 1 : 0;
+
   const [formData, setFormData] = useState<any>({
-    ref_no: refNo,
+    ref_no: urlRefNo || '',
     phoneNumber: phone,
     citizenship: '',
     surname: '',
@@ -75,17 +79,38 @@ const FormProvider = ({ children }: { children: React.ReactNode }) => {
     assessments: []
   });
 
-  const [currentStep, setCurrentStep] = useState(1);
+  const [currentStep, setCurrentStep] = useState(initialStep);
   const [loading, setLoading] = useState(false);
   const [countries, setCountries] = useState<any[]>([]);
   const [entryPoints, setEntryPoints] = useState<any[]>([]);
   const [currencies, setCurrencies] = useState<any[]>([]);
 
+  // NEW: Function to handle the "Start Application" click
+  const startApplication = async () => {
+    setLoading(true);
+    try {
+      const newRefNo = await initializeDeclaration();
+      
+      if (newRefNo) {
+        setFormData((prev: any) => ({ ...prev, ref_no: newRefNo }));
+        setCurrentStep(1); // Move to Step 1
+      } else {
+        alert("Could not generate a reference number. Please try again.");
+      }
+    } catch (e) {
+      console.error("Failed to start application", e);
+      alert("System error. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     const init = async () => {
-      if (refNo) {
+      // Only fetch existing declaration if we actually have a Ref No
+      if (formData.ref_no) {
         try {
-          const data = await getDeclaration(refNo);
+          const data = await getDeclaration(formData.ref_no);
           if (data) {
              setFormData((prev: any) => ({ ...prev, ...data }));
           }
@@ -94,35 +119,24 @@ const FormProvider = ({ children }: { children: React.ReactNode }) => {
         }
       }
       
+      // Fetch static data (Countries, etc)
+      // Note: You might want to move these out of this specific useEffect 
+      // so they load even on the landing page
       try {
         const countriesData = await getCountries();
-        if (countriesData) {
-            setCountries(countriesData);
-        }
-      } catch (e) {
-          console.error("Failed to fetch countries", e);
-      }
-
-      try {
+        if (countriesData) setCountries(countriesData);
+        
         const entryPointsData = await getEntryPoints();
-        if (entryPointsData) {
-            setEntryPoints(entryPointsData);
-        }
-      } catch (e) {
-          console.error("Failed to fetch entry points", e);
-      }
+        if (entryPointsData) setEntryPoints(entryPointsData);
 
-      try {
         const currenciesData = await getCurrencies();
-        if (currenciesData) {
-            setCurrencies(currenciesData);
-        }
+        if (currenciesData) setCurrencies(currenciesData);
       } catch (e) {
-          console.error("Failed to fetch currencies", e);
+          console.error("Failed to fetch static data", e);
       }
     };
     init();
-  }, [refNo]);
+  }, [formData.ref_no]); // Depend on formData.ref_no so it triggers after startApplication
 
   const updateFormData = (updates: any) => {
     setFormData((prev: any) => ({ ...prev, ...updates }));
@@ -157,12 +171,15 @@ const FormProvider = ({ children }: { children: React.ReactNode }) => {
       countries,
       entryPoints,
       currencies,
-      refNo
+      refNo: formData.ref_no,
+      startApplication // Expose the new function
     }}>
       {children}
     </FormContext.Provider>
   );
 };
+
+
 
 // Progress Steps Component
 const ProgressSteps = ({ currentStep }: { currentStep: number }) => {
@@ -202,6 +219,83 @@ const ProgressSteps = ({ currentStep }: { currentStep: number }) => {
             )}
           </div>
         ))}
+      </div>
+    </div>
+  );
+};
+
+
+const LandingPage = () => {
+  const { startApplication, loading } = useFormContext();
+
+  return (
+    <div className="bg-white rounded-xl shadow-sm border-t-4 border-[#CC0000] overflow-hidden">
+      <div className="p-6 sm:p-8">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">
+          Passenger Declaration Form - Kenya
+        </h1>
+
+        <p className="text-gray-600 mb-6">
+          This form MUST be completed by ALL passengers prior to arrival in Kenya and presented to Customs officials at the point of entry.
+          <br />
+          Please read the <span className="text-orange-500 font-medium">restrictions and prohibitions</span> notes before applying for this declaration.
+        </p>
+
+        <h2 className="text-xl font-semibold mb-4 text-gray-800">What you need to know...</h2>
+
+        <div className="space-y-4 mb-8">
+          {/* Info Card 1 */}
+          <div className="bg-gray-50 p-5 rounded-lg border border-gray-100">
+            <h3 className="font-semibold text-gray-900 mb-2">Free for all travelers</h3>
+            <p className="text-gray-600 text-sm">
+              This service is <span className="font-bold">free to all travelers</span> entering Kenya. You will only be required to pay when you have items exceeding specified restrictions.
+            </p>
+          </div>
+
+          {/* Info Card 2 */}
+          <div className="bg-gray-50 p-5 rounded-lg border border-gray-100">
+            <h3 className="font-semibold text-gray-900 mb-2">Who should fill this form?</h3>
+            <p className="text-gray-600 text-sm">
+              This service applies to <span className="font-bold">all travelers entering Kenya</span>.
+            </p>
+          </div>
+
+          {/* Info Card 3 */}
+          <div className="bg-gray-50 p-5 rounded-lg border border-gray-100">
+            <h3 className="font-semibold text-gray-900 mb-2">What you will need</h3>
+            <p className="text-gray-600 text-sm mb-2">To apply for a passenger declaration, you will need:</p>
+            <ul className="list-decimal list-inside text-gray-600 text-sm space-y-1">
+              <li>Passport Details</li>
+              <li>Purpose of Travel</li>
+              <li>Travel history (last 6 days)</li>
+              <li>Contact details</li>
+              <li>Items to declare</li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Warning Box */}
+        <div className="bg-red-50 border border-red-100 rounded-lg p-5 mb-8 flex gap-3">
+          <AlertCircle className="w-6 h-6 text-[#CC0000] flex-shrink-0" />
+          <div>
+            <h3 className="text-[#CC0000] font-bold mb-1">Attention!</h3>
+            <p className="text-[#CC0000] text-sm">
+              Providing false, incomplete or misleading information will result to fines of upto KES 50,000, confiscation of goods or prosecution, imprisonment or deportation.
+            </p>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row justify-end items-center gap-4 pt-4 border-t border-gray-100">
+          
+          <button 
+            onClick={startApplication}
+            disabled={loading}
+            className="px-8 py-3 bg-black text-white rounded-full font-medium hover:bg-gray-800 transition-colors w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? 'Initializing...' : 'Start Application'}
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -371,7 +465,7 @@ const DeclarationModal = ({ isOpen, onClose, declarationType, onSave }: any) => 
                   <option value="">Select Currency...</option>
                   {currencies?.map((curr: any) => (
                     <option key={curr.code} value={curr.code}>
-                      {curr.code} - {curr.name}
+                      {curr.description}
                     </option>
                   ))}
                 </select>
@@ -545,6 +639,7 @@ const PassengerInformation = () => {
   const { formData, updateFormData, setCurrentStep, setLoading, refNo, countries } = useFormContext();
   const [errors, setErrors] = useState<any>({});
 
+
   const validate = () => {
     const newErrors: any = {};
     if (!formData.citizenship) newErrors.citizenship = 'Required';
@@ -707,7 +802,7 @@ const PassengerInformation = () => {
               className="w-full px-3 py-2 border border-gray-300 rounded-md"
             >
               {countries.map((country: any) => (
-                <option key={country.id} value={country.id}>
+                <option key={country.code} value={country.code}>
                   {country.name}
                 </option>
               ))}
@@ -720,10 +815,10 @@ const PassengerInformation = () => {
               Date Of Birth <span className="text-red-500">*</span>
             </label>
             <input
-              type="date"
+              type="text"
               placeholder="DD/MM/YYYY"
-              min="1900-01-01"
-              max={new Date().toISOString().split('T')[0]}
+          
+              
               value={formData.dateOfBirth}
               onChange={(e) => {
                 // Allow only numbers and slashes
@@ -979,7 +1074,7 @@ const TravelInformation = () => {
             className="w-full px-3 py-2 border border-gray-300 rounded-md"
           >
          {countries.map((country: any) => (
-            <option key={country.id} value={country.id}>
+            <option key={country.code} value={country.code}>
               {country.name}
             </option>
           ))}
@@ -1114,22 +1209,92 @@ const Declarations = () => {
   ];
 
   const handleNext = async () => {
+    console.log(formData);
     setLoading(true);
     try {
         // Construct items payload
-        const items = [];
+        const items: any[] = [];
         
-        if (formData.restrictedItemsList) {
-            items.push(...formData.restrictedItemsList.map((i: any) => ({
-                type: "Restricted Items",
-                hscode: i.hsCode,
-                description: i.description,
-                quantity: i.packages,
-                value: i.value,
-                currency: i.currency
+        // Helper function to map common item structure (keys in snake_case, except hscode)
+        const mapItem = (item: any, itemType: string) => ({
+            type: itemType,
+            hscode: item.hsCode,
+            description: item.description,
+            quantity: Number(item.packages) || 0,
+            value: Number(item.value) || 0,
+            currency: item.currency
+        });
+
+        // Restricted Items
+        if (formData.restrictedItemsList?.length > 0) {
+            items.push(...formData.restrictedItemsList.map((i: any) => mapItem(i, "Restricted Items")));
+        }
+
+        // Duty Free Exceeding
+        if (formData.dutyFreeExceedingList?.length > 0) {
+            items.push(...formData.dutyFreeExceedingList.map((i: any) => mapItem(i, "Duty Free Exceeding")));
+        }
+
+        // Commercial Goods
+        if (formData.commercialGoodsList?.length > 0) {
+            items.push(...formData.commercialGoodsList.map((i: any) => mapItem(i, "Commercial Goods")));
+        }
+
+        // Dutiable Goods
+        if (formData.dutiableGoodsList?.length > 0) {
+            items.push(...formData.dutiableGoodsList.map((i: any) => mapItem(i, "Dutiable Goods")));
+        }
+
+        // Gifts
+        if (formData.giftsList?.length > 0) {
+            items.push(...formData.giftsList.map((i: any) => mapItem(i, "Gifts")));
+        }
+
+        // Exceeding $10,000 (currency declaration - different structure)
+        if (formData.exceeding10000List?.length > 0) {
+            items.push(...formData.exceeding10000List.map((i: any) => ({
+                type: "Currency Exceeding $10,000",
+                currency: i.currency,
+                value_of_fund: Number(i.valueOfFund) || 0,
+                source_of_fund: i.sourceOfFund,
+                purpose_of_fund: i.purposeOfFund
             })));
         }
-        // Add other lists similarly...
+
+        // Exceeding $2,000
+        if (formData.exceeding2000List?.length > 0) {
+            items.push(...formData.exceeding2000List.map((i: any) => mapItem(i, "Currency Exceeding $2,000")));
+        }
+
+        // Mobile Devices (includes make, model, imei)
+        if (formData.mobileDevicesList?.length > 0) {
+            items.push(...formData.mobileDevicesList.map((i: any) => ({
+                type: "Mobile Devices",
+                hscode: i.hsCode,
+                description: i.description,
+                quantity: Number(i.packages) || 0,
+                value: Number(i.value) || 0,
+                currency: i.currency,
+                make: i.make,
+                model: i.model,
+                imei: i.imei
+            })));
+        }
+
+        // Filming Equipment
+        if (formData.filmingEquipmentList?.length > 0) {
+            items.push(...formData.filmingEquipmentList.map((i: any) => mapItem(i, "Filming Equipment")));
+        }
+
+        // Re-Importation Goods
+        if (formData.reImportationGoodsList?.length > 0) {
+            items.push(...formData.reImportationGoodsList.map((i: any) => ({
+                type: "Re-Importation Goods",
+                certificate_no: i.certificateNo
+            })));
+        }
+
+        console.log("Items to submit:", items);
         
         if (items.length > 0) {
             const payload = {
@@ -1137,6 +1302,7 @@ const Declarations = () => {
                 items: items,
                 compute_assessments: true
             };
+            console.log(payload);
             const response = await submitDeclarationItems(payload);
             if (response && response.assesments) {
                 updateFormData({ assessments: response.assesments });
@@ -1413,6 +1579,12 @@ export default function Home() {
 
 const MainContent = () => {
   const { currentStep } = useFormContext();
+
+  // If step is 0, show Landing Page. 
+  // Else show the Form Container with Progress Steps
+  if (currentStep === 0) {
+    return <LandingPage />;
+  }
 
   return (
     <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 md:p-8 border-t-4 border-[#CC0000]">

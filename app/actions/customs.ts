@@ -29,8 +29,11 @@ export async function submitTravelInfo(data: any) {
 }
 
 export async function submitDeclarationItems(data: any) {
+  console.log(data);
   try {
     const response = await axios.post(`${BASE_URL}/api/customs/passenger-declaration`, data);
+
+    console.log(response.data);
     return response.data;
   } catch (error) {
     handleApiError(error);
@@ -141,5 +144,33 @@ export async function sendWhatsappNotification(payload: {
     console.error('Failed to send WhatsApp notification:', error);
     // We don't want to break the flow if notification fails, so just log it
     return { success: false, error: 'Failed to send notification' };
+  }
+}
+
+
+// actions/customs.ts
+
+export async function initializeDeclaration() {
+  try {
+    const res = await fetch('https://kratest.pesaflow.com/api/customs/passenger-declaration', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        uid: 308 // Hardcoded as per your requirement
+      }),
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to initialize declaration');
+    }
+
+    const data = await res.json();
+    // Assuming the API returns { ref_no: "..." } or similar structure
+    return data.ref_no; 
+  } catch (error) {
+    console.error('Error initializing declaration:', error);
+    return null;
   }
 }

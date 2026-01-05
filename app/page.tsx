@@ -739,12 +739,12 @@ const PassengerInformation = () => {
     if (!formData.nationality) newErrors.nationality = 'Required';
     if (!formData.nationality) newErrors.nationality = 'Required';
     
-    // Date validation (DD/MM/YYYY)
-    const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+    // Date validation (flexible: D/M/YYYY or DD/MM/YYYY)
+    const dateRegex = /^\d{1,2}\/\d{1,2}\/\d{4}$/;
     if (!formData.dateOfBirth) {
       newErrors.dateOfBirth = 'Required';
     } else if (!dateRegex.test(formData.dateOfBirth)) {
-      newErrors.dateOfBirth = 'Format must be DD/MM/YYYY';
+      newErrors.dateOfBirth = 'Invalid date format';
     }
 
     if (!formData.gender) newErrors.gender = 'Required';
@@ -798,9 +798,7 @@ const PassengerInformation = () => {
       {/* Compact header */}
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-lg font-bold text-[#CC0000]">Passenger Information</h1>
-        <button className="px-2 py-1 border border-gray-200 rounded text-xs flex items-center gap-1">
-          🇬🇧 EN
-        </button>
+        
       </div>
 
       <div className="space-y-4">
@@ -1010,12 +1008,12 @@ const TravelInformation = () => {
   const validate = () => {
     const newErrors: any = {};
     
-    // Date validation (DD/MM/YYYY)
-    const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+    // Date validation (flexible: D/M/YYYY or DD/MM/YYYY)
+    const dateRegex = /^\d{1,2}\/\d{1,2}\/\d{4}$/;
     if (!formData.arrivalDate) {
       newErrors.arrivalDate = 'Required';
     } else if (!dateRegex.test(formData.arrivalDate)) {
-      newErrors.arrivalDate = 'Format must be DD/MM/YYYY';
+      newErrors.arrivalDate = 'Invalid date format';
     }
 
     if (!formData.arrivingFrom) newErrors.arrivingFrom = 'Required';
@@ -1069,9 +1067,7 @@ const TravelInformation = () => {
       {/* Compact header */}
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-lg font-bold text-[#CC0000]">Travel Information</h1>
-        <button className="px-2 py-1 border border-gray-200 rounded text-xs flex items-center gap-1">
-          🇬🇧 EN
-        </button>
+        
       </div>
 
       <div className="space-y-3">
@@ -1338,9 +1334,7 @@ const Declarations = () => {
       {/* Compact header */}
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-lg font-bold text-[#CC0000]">Declarations</h1>
-        <button className="px-2 py-1 border border-gray-200 rounded text-xs flex items-center gap-1">
-          🇬🇧 EN
-        </button>
+        
       </div>
 
       <div className="space-y-2">
@@ -1481,9 +1475,7 @@ const TaxComputation = () => {
       {/* Compact header */}
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-lg font-bold text-[#CC0000]">Tax Computation</h1>
-        <button className="px-2 py-1 border border-gray-200 rounded text-xs flex items-center gap-1">
-          🇬🇧 EN
-        </button>
+        
       </div>
 
       {/* Compact assessment summary */}

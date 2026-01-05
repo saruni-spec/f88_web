@@ -27,15 +27,13 @@ const useFormContext = () => {
 
 const FormProvider = ({ children }: { children: React.ReactNode }) => {
   const searchParams = useSearchParams();
-  const urlRefNo = searchParams.get('ref_no'); // Rename to distinguish from state refNo
-  const phone = searchParams.get('msisdn') || searchParams.get('phone');
+  // Get phone from URL params (?phone=254... or ?msisdn=254...)
+  const phoneFromUrl = searchParams.get('phone') || searchParams.get('msisdn') || '';
 
-  // Logic: If ref_no exists in URL, start at Step 1, otherwise Step 0 (Landing)
-  const initialStep = urlRefNo ? 1 : 0;
-
+  // Always start at Step 0 (Landing page) - ref_no is generated when user clicks "Start Application"
   const [formData, setFormData] = useState<any>({
-    ref_no: urlRefNo || '',
-    phoneNumber: phone,
+    ref_no: '',
+    phoneNumber: phoneFromUrl,
     citizenship: '',
     surname: '',
     firstName: '',
@@ -45,7 +43,7 @@ const FormProvider = ({ children }: { children: React.ReactNode }) => {
     kraPin: '',
     profession: '',
     gender: '',
-    phone: phone || '',
+    phone: phoneFromUrl,
     email: '',
     hotelResidence: '',
     physicalAddress: '',
@@ -79,7 +77,7 @@ const FormProvider = ({ children }: { children: React.ReactNode }) => {
     assessments: []
   });
 
-  const [currentStep, setCurrentStep] = useState(initialStep);
+  const [currentStep, setCurrentStep] = useState(0); // Always start at landing page
   const [loading, setLoading] = useState(false);
   const [countries, setCountries] = useState<any[]>([]);
   const [entryPoints, setEntryPoints] = useState<any[]>([]);
@@ -230,68 +228,68 @@ const LandingPage = () => {
 
   return (
     <div className="bg-white rounded-xl shadow-sm border-t-4 border-[#CC0000] overflow-hidden">
-      <div className="p-6 sm:p-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6">
-          Passenger Declaration Form - Kenya
-        </h1>
+      <div className="p-4 sm:p-6">
+        {/* Header with language selector */}
+        <div className="flex justify-between items-start mb-3">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+            Passenger Declaration Form - Kenya
+          </h1>
+          <button className="px-3 py-1.5 border border-gray-200 rounded-md text-xs flex items-center gap-1.5 hover:bg-gray-50">
+            🇬🇧 English
+          </button>
+        </div>
 
-        <p className="text-gray-600 mb-6">
-          This form MUST be completed by ALL passengers prior to arrival in Kenya and presented to Customs officials at the point of entry.
-          <br />
-          Please read the <span className="text-orange-500 font-medium">restrictions and prohibitions</span> notes before applying for this declaration.
+        <p className="text-gray-600 text-sm mb-4">
+          This form MUST be completed by ALL passengers prior to arrival in Kenya.
+          Please read the <span className="text-orange-500 font-medium">restrictions and prohibitions</span> notes before applying.
         </p>
 
-        <h2 className="text-xl font-semibold mb-4 text-gray-800">What you need to know...</h2>
+        <h2 className="text-base font-semibold mb-3 text-gray-800">What you need to know...</h2>
 
-        <div className="space-y-4 mb-8">
+        {/* Info Cards - Grid layout for compactness */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
           {/* Info Card 1 */}
-          <div className="bg-gray-50 p-5 rounded-lg border border-gray-100">
-            <h3 className="font-semibold text-gray-900 mb-2">Free for all travelers</h3>
-            <p className="text-gray-600 text-sm">
-              This service is <span className="font-bold">free to all travelers</span> entering Kenya. You will only be required to pay when you have items exceeding specified restrictions.
+          <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
+            <h3 className="font-semibold text-gray-900 text-sm mb-1">Free for all travelers</h3>
+            <p className="text-gray-600 text-xs">
+              This service is <span className="font-bold">free to all travelers</span> entering Kenya.
             </p>
           </div>
 
           {/* Info Card 2 */}
-          <div className="bg-gray-50 p-5 rounded-lg border border-gray-100">
-            <h3 className="font-semibold text-gray-900 mb-2">Who should fill this form?</h3>
-            <p className="text-gray-600 text-sm">
-              This service applies to <span className="font-bold">all travelers entering Kenya</span>.
+          <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
+            <h3 className="font-semibold text-gray-900 text-sm mb-1">Who should fill this form?</h3>
+            <p className="text-gray-600 text-xs">
+              This applies to <span className="font-bold">all travelers entering Kenya</span>.
             </p>
           </div>
 
           {/* Info Card 3 */}
-          <div className="bg-gray-50 p-5 rounded-lg border border-gray-100">
-            <h3 className="font-semibold text-gray-900 mb-2">What you will need</h3>
-            <p className="text-gray-600 text-sm mb-2">To apply for a passenger declaration, you will need:</p>
-            <ul className="list-decimal list-inside text-gray-600 text-sm space-y-1">
-              <li>Passport Details</li>
-              <li>Purpose of Travel</li>
-              <li>Travel history (last 6 days)</li>
-              <li>Contact details</li>
-              <li>Items to declare</li>
-            </ul>
-          </div>
-        </div>
-
-        {/* Warning Box */}
-        <div className="bg-red-50 border border-red-100 rounded-lg p-5 mb-8 flex gap-3">
-          <AlertCircle className="w-6 h-6 text-[#CC0000] flex-shrink-0" />
-          <div>
-            <h3 className="text-[#CC0000] font-bold mb-1">Attention!</h3>
-            <p className="text-[#CC0000] text-sm">
-              Providing false, incomplete or misleading information will result to fines of upto KES 50,000, confiscation of goods or prosecution, imprisonment or deportation.
+          <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
+            <h3 className="font-semibold text-gray-900 text-sm mb-1">What you will need</h3>
+            <p className="text-gray-600 text-xs">
+              Passport, travel history, contact details & items to declare.
             </p>
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row justify-end items-center gap-4 pt-4 border-t border-gray-100">
-          
+        {/* Warning Box - Compact */}
+        <div className="bg-red-50 border border-red-100 rounded-lg p-3 mb-4 flex gap-2">
+          <AlertCircle className="w-5 h-5 text-[#CC0000] flex-shrink-0 mt-0.5" />
+          <div>
+            <h3 className="text-[#CC0000] font-bold text-sm">Attention!</h3>
+            <p className="text-[#CC0000] text-xs">
+              Providing false information may result in fines up to KES 50,000, confiscation of goods, prosecution, or deportation.
+            </p>
+          </div>
+        </div>
+
+        {/* Action Button */}
+        <div className="flex justify-end pt-3 border-t border-gray-100">
           <button 
             onClick={startApplication}
             disabled={loading}
-            className="px-8 py-3 bg-black text-white rounded-full font-medium hover:bg-gray-800 transition-colors w-full sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-2.5 bg-black text-white rounded-full font-medium hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
           >
             {loading ? 'Initializing...' : 'Start Application'}
           </button>

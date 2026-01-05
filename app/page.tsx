@@ -180,49 +180,6 @@ const FormProvider = ({ children }: { children: React.ReactNode }) => {
 
 
 
-// Progress Steps Component
-const ProgressSteps = ({ currentStep }: { currentStep: number }) => {
-  const steps = [
-    { num: 1, label: 'Passenger Info', shortLabel: 'Passenger' },
-    { num: 2, label: 'Travel Info', shortLabel: 'Travel' },
-    { num: 3, label: 'Declarations', shortLabel: 'Declare' },
-    { num: 4, label: 'Tax Computation', shortLabel: 'Tax' }
-  ];
-
-  return (
-    <div className="mb-6 sm:mb-8">
-      <div className="flex items-center justify-between sm:justify-center sm:gap-4">
-        {steps.map((step, idx) => (
-          <div key={step.num} className="flex items-center">
-            <div className="flex flex-col items-center">
-              <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium transition-colors ${
-                currentStep === step.num 
-                  ? 'bg-[#CC0000] text-[#CC0000] ring-2 ring-[#CC0000] ring-offset-2' 
-                  : currentStep > step.num
-                  ? 'bg-[#CC0000] text-white'
-                  : 'bg-gray-200 text-gray-500'
-              }`}>
-                {currentStep > step.num ? '✓' : step.num}
-              </div>
-              <span className={`text-[10px] sm:text-xs mt-1.5 sm:mt-2 text-center ${
-                currentStep === step.num ? 'text-[#CC0000] font-semibold' : 'text-gray-500'
-              }`}>
-                <span className="hidden sm:inline">{step.label}</span>
-                <span className="sm:hidden">{step.shortLabel}</span>
-              </span>
-            </div>
-            {idx < steps.length - 1 && (
-              <div className={`h-0.5 w-6 sm:w-12 mx-1 sm:mx-2 transition-colors ${
-                currentStep > step.num ? 'bg-[#CC0000]' : 'bg-gray-200'
-              }`} />
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
 // Reusable Date Input Component (DD/MM/YYYY format)
 interface DateInputProps {
   value: string;
@@ -1589,7 +1546,7 @@ const MainContent = () => {
         <LandingPage />
       ) : (
         <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 md:p-8 border-t-4 border-[#CC0000]">
-          <ProgressSteps currentStep={currentStep} />
+        
           {currentStep === 1 && <PassengerInformation />}
           {currentStep === 2 && <TravelInformation />}
           {currentStep === 3 && <Declarations />}

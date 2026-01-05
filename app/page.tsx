@@ -222,6 +222,103 @@ const ProgressSteps = ({ currentStep }: { currentStep: number }) => {
   );
 };
 
+// Reusable Date Input Component (DD/MM/YYYY format)
+interface DateInputProps {
+  value: string;
+  onChange: (value: string) => void;
+  label: string;
+  required?: boolean;
+  error?: string;
+  minDate?: Date;
+  maxDate?: Date;
+  placeholder?: string;
+}
+
+const DateInput = ({ 
+  value, 
+  onChange, 
+  label, 
+  required = false, 
+  error, 
+  minDate, 
+  maxDate,
+  placeholder = "DD/MM/YYYY" 
+}: DateInputProps) => {
+  
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let val = e.target.value;
+    
+    // Remove any non-digit/non-slash characters
+    val = val.replace(/[^\d/]/g, '');
+    
+    // Auto-add slashes for better UX
+    if (val.length === 2 && !val.includes('/')) {
+      val = val + '/';
+    } else if (val.length === 5 && val.split('/').length === 2) {
+      val = val + '/';
+    }
+    
+    // Limit to 10 characters (DD/MM/YYYY)
+    if (val.length <= 10) {
+      onChange(val);
+    }
+  };
+
+  // Validate date is within min/max range
+  const validateDate = (dateStr: string): string | null => {
+    if (!dateStr) return null;
+    
+    // Accept flexible format: D/M/YYYY, DD/M/YYYY, D/MM/YYYY, DD/MM/YYYY
+    const datePattern = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
+    const match = dateStr.match(datePattern);
+    
+    if (!match) return null; // Don't show error while user is still typing
+    
+    const day = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10);
+    const year = parseInt(match[3], 10);
+    
+    // Basic validation
+    if (month < 1 || month > 12) return 'Invalid month';
+    if (day < 1 || day > 31) return 'Invalid day';
+    
+    const date = new Date(year, month - 1, day);
+    
+    // Check if date is valid (handles things like Feb 30)
+    if (isNaN(date.getTime()) || date.getDate() !== day) return 'Invalid date';
+    
+    if (minDate && date < minDate) {
+      return `Date must be after ${minDate.toLocaleDateString('en-GB')}`;
+    }
+    
+    if (maxDate && date > maxDate) {
+      return `Date must be before ${maxDate.toLocaleDateString('en-GB')}`;
+    }
+    
+    return null;
+  };
+
+  const dateError = validateDate(value);
+  const displayError = error || dateError;
+
+  return (
+    <div>
+      <label className="block text-sm font-medium mb-1">
+        {label} {required && <span className="text-red-500">*</span>}
+      </label>
+      <input
+        type="text"
+        placeholder={placeholder}
+        value={value}
+        onChange={handleChange}
+        className={`w-full px-3 py-2 border rounded-md ${
+          displayError ? 'border-red-300' : 'border-gray-300'
+        }`}
+      />
+      {displayError && <p className="text-red-500 text-xs mt-1">{displayError}</p>}
+    </div>
+  );
+};
 
 const LandingPage = () => {
   const { startApplication, loading } = useFormContext();
@@ -703,32 +800,28 @@ const PassengerInformation = () => {
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
-        <h1 className="text-xl sm:text-2xl font-bold text-[#CC0000]">Passenger Information</h1>
-        <div className="flex gap-2">
-          <button className="px-3 sm:px-4 py-2 border border-gray-300 rounded-md text-xs sm:text-sm hover:bg-gray-50 transition-colors">
-            Save Draft
-          </button>
-          <button className="px-3 sm:px-4 py-2 border border-gray-300 rounded-md text-xs sm:text-sm flex items-center gap-2 hover:bg-gray-50 transition-colors">
-            🇬🇧 <span className="hidden sm:inline">English</span>
-          </button>
-        </div>
+      {/* Compact header */}
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-lg font-bold text-[#CC0000]">Passenger Information</h1>
+        <button className="px-2 py-1 border border-gray-200 rounded text-xs flex items-center gap-1">
+          🇬🇧 EN
+        </button>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-4">
+        {/* Citizenship - compact 2x2 grid */}
         <div>
-          <h2 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-[#CC0000]">Citizenship</h2>
           <label className="block text-sm font-medium mb-2 text-gray-700">
-            Select Citizenship <span className="text-[#C8102E]">*</span>
+            Citizenship <span className="text-[#C8102E]">*</span>
           </label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
-            {['Foreigner', 'Kenyan Citizens', 'Other East African Citizens', 'Diplomats'].map(option => (
+          <div className="grid grid-cols-2 gap-2">
+            {['Foreigner', 'Kenyan', 'East African', 'Diplomat'].map(option => (
               <label 
                 key={option} 
-                className={`flex items-center gap-2 p-3 rounded-lg border-2 cursor-pointer transition-all touch-target ${
+                className={`flex items-center gap-1.5 p-2 rounded-lg border cursor-pointer text-xs ${
                   formData.citizenship === option 
                     ? 'border-[#CC0000] bg-[#CC0000]/10' 
-                    : 'border-gray-200 hover:border-gray-300'
+                    : 'border-gray-200'
                 }`}
               >
                 <input
@@ -737,229 +830,175 @@ const PassengerInformation = () => {
                   value={option}
                   checked={formData.citizenship === option}
                   onChange={(e) => updateFormData({ citizenship: e.target.value })}
-                  className="w-4 h-4 sm:w-5 sm:h-5"
+                  className="w-3.5 h-3.5"
                 />
-                <span className="text-xs sm:text-sm font-medium text-gray-700">{option}</span>
+                <span className="font-medium text-gray-700">{option}</span>
               </label>
             ))}
           </div>
-          {errors.citizenship && <p className="text-[#C8102E] text-xs mt-2">{errors.citizenship}</p>}
+          {errors.citizenship && <p className="text-[#C8102E] text-xs mt-1">{errors.citizenship}</p>}
         </div>
 
-        <div>
-          <h2 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-[#CC0000]">Basic Information</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Surname <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={formData.surname || ''}
-                onChange={(e) => updateFormData({ surname: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              />
-              {errors.surname && <p className="text-red-500 text-xs mt-1">{errors.surname}</p>}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                First Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={formData.firstName}
-                onChange={(e) => updateFormData({ firstName: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              />
-              {errors.firstName && <p className="text-red-500 text-xs mt-1">{errors.firstName}</p>}
-            </div>
+        {/* Basic Information - compact grid layout */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-medium mb-1">Surname <span className="text-red-500">*</span></label>
+            <input
+              type="text"
+              value={formData.surname || ''}
+              onChange={(e) => updateFormData({ surname: e.target.value })}
+              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+            />
+            {errors.surname && <p className="text-red-500 text-xs mt-0.5">{errors.surname}</p>}
           </div>
-
-          <div className="mt-4">
-            <label className="block text-sm font-medium mb-1">
-              Passport/ID No. <span className="text-red-500">*</span>
-            </label>
+          <div>
+            <label className="block text-xs font-medium mb-1">First Name <span className="text-red-500">*</span></label>
+            <input
+              type="text"
+              value={formData.firstName}
+              onChange={(e) => updateFormData({ firstName: e.target.value })}
+              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+            />
+            {errors.firstName && <p className="text-red-500 text-xs mt-0.5">{errors.firstName}</p>}
+          </div>
+          <div>
+            <label className="block text-xs font-medium mb-1">Passport/ID <span className="text-red-500">*</span></label>
             <input
               type="text"
               value={formData.passportNo}
               onChange={(e) => updateFormData({ passportNo: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
             />
-            {errors.passportNo && <p className="text-red-500 text-xs mt-1">{errors.passportNo}</p>}
+            {errors.passportNo && <p className="text-red-500 text-xs mt-0.5">{errors.passportNo}</p>}
           </div>
-
-          <div className="mt-4">
-            <label className="block text-sm font-medium mb-1">
-              Nationality <span className="text-red-500">*</span>
-            </label>
+          <div>
+            <label className="block text-xs font-medium mb-1">Nationality <span className="text-red-500">*</span></label>
             <select
               value={formData.nationality || ''}
               onChange={(e) => updateFormData({ nationality: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
             >
               {countries.map((country: any) => (
-                <option key={country.code} value={country.code}>
-                  {country.name}
-                </option>
+                <option key={country.code} value={country.code}>{country.name}</option>
               ))}
             </select>
-            {errors.nationality && <p className="text-red-500 text-xs mt-1">{errors.nationality}</p>}
+            {errors.nationality && <p className="text-red-500 text-xs mt-0.5">{errors.nationality}</p>}
           </div>
+        </div>
 
-          <div className="mt-4">
-            <label className="block text-sm font-medium mb-1">
-              Date Of Birth <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              placeholder="DD/MM/YYYY"
-          
-              
-              value={formData.dateOfBirth}
-              onChange={(e) => {
-                // Allow only numbers and slashes
-                const val = e.target.value;
-                if (/^[\d/]*$/.test(val) && val.length <= 10) {
-                   updateFormData({ dateOfBirth: val });
-                }
-              }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            />
-            {errors.dateOfBirth && <p className="text-red-500 text-xs mt-1">{errors.dateOfBirth}</p>}
-          </div>
-
-          {formData.citizenship === 'Kenyan Citizens' && (
-            <div className="mt-4">
-              <label className="block text-sm font-medium mb-1">KRA PIN</label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={formData.kraPin}
-                  onChange={(e) => updateFormData({ kraPin: e.target.value })}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
-                />
-                <button className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md">
-                  Send OTP
-                </button>
-              </div>
-              <p className="text-orange-500 text-xs mt-1">Omitting PIN will result in assignment of a generic PIN</p>
-            </div>
-          )}
-
-          <div className="mt-4">
-            <label className="block text-sm font-medium mb-1">Profession (Optional)</label>
-            <input
-              type="text"
-              value={formData.profession || ''}
-              onChange={(e) => updateFormData({ profession: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
-            />
-          </div>
-
-          <div className="mt-4">
-            <label className="block text-sm font-medium mb-2 text-gray-700">
-              Gender <span className="text-[#C8102E]">*</span>
-            </label>
-            <div className="flex flex-wrap gap-2 sm:gap-3">
-              {['Female', 'Male'].map(option => (
+        {/* DOB, Gender, Profession row */}
+        <div className="grid grid-cols-3 gap-3">
+          <DateInput
+            label="Date of Birth"
+            required
+            value={formData.dateOfBirth}
+            onChange={(val) => updateFormData({ dateOfBirth: val })}
+            error={errors.dateOfBirth}
+            maxDate={new Date()}
+          />
+          <div>
+            <label className="block text-xs font-medium mb-1">Gender <span className="text-red-500">*</span></label>
+            <div className="flex gap-2">
+              {['M', 'F'].map(option => (
                 <label 
                   key={option} 
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border-2 cursor-pointer transition-all touch-target ${
-                    formData.gender === option 
-                      ? 'border-[#CC0000] bg-[#CC0000]/10' 
-                      : 'border-gray-200 hover:border-gray-300'
+                  className={`flex-1 text-center py-1.5 rounded border cursor-pointer text-xs font-medium ${
+                    formData.gender === (option === 'M' ? 'Male' : 'Female')
+                      ? 'border-[#CC0000] bg-[#CC0000]/10 text-[#CC0000]' 
+                      : 'border-gray-200 text-gray-600'
                   }`}
                 >
                   <input
                     type="radio"
                     name="gender"
-                    value={option}
-                    checked={formData.gender === option}
+                    value={option === 'M' ? 'Male' : 'Female'}
+                    checked={formData.gender === (option === 'M' ? 'Male' : 'Female')}
                     onChange={(e) => updateFormData({ gender: e.target.value })}
-                    className="w-4 h-4 sm:w-5 sm:h-5"
+                    className="sr-only"
                   />
-                  <span className="text-sm font-medium text-gray-700">{option}</span>
+                  {option}
                 </label>
               ))}
             </div>
-            {errors.gender && <p className="text-[#C8102E] text-xs mt-2">{errors.gender}</p>}
+            {errors.gender && <p className="text-red-500 text-xs mt-0.5">{errors.gender}</p>}
+          </div>
+          <div>
+            <label className="block text-xs font-medium mb-1">Profession</label>
+            <input
+              type="text"
+              value={formData.profession || ''}
+              onChange={(e) => updateFormData({ profession: e.target.value })}
+              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+            />
           </div>
         </div>
 
-        <div>
-          <h2 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4 text-[#CC0000]">Contact Information</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Phone Number <span className="text-red-500">*</span>
-              </label>
-              <div className="flex gap-2">
-                <select className="px-3 py-2 border border-gray-300 rounded-md">
-                  <option>🇰🇪 +254</option>
-                </select>
-                <input
-                  type="tel"
-                  value={formData.phone}
-                  onChange={(e) => updateFormData({ phone: e.target.value })}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md"
-                />
-              </div>
-              {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                Email Address <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => updateFormData({ email: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              />
-              {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
-            </div>
+        {formData.citizenship === 'Kenyan' && (
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="KRA PIN (optional)"
+              value={formData.kraPin}
+              onChange={(e) => updateFormData({ kraPin: e.target.value })}
+              className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm"
+            />
+            <button className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded text-xs">OTP</button>
           </div>
+        )}
 
-          <div className="mt-4">
-            <label className="block text-sm font-medium mb-1">Hotel/Residence</label>
+        {/* Contact Information - compact */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-medium mb-1">Phone <span className="text-red-500">*</span></label>
+            <input
+              type="tel"
+              value={formData.phone}
+              onChange={(e) => updateFormData({ phone: e.target.value })}
+              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+              placeholder="254..."
+            />
+            {errors.phone && <p className="text-red-500 text-xs mt-0.5">{errors.phone}</p>}
+          </div>
+          <div>
+            <label className="block text-xs font-medium mb-1">Email <span className="text-red-500">*</span></label>
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) => updateFormData({ email: e.target.value })}
+              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+            />
+            {errors.email && <p className="text-red-500 text-xs mt-0.5">{errors.email}</p>}
+          </div>
+          <div>
+            <label className="block text-xs font-medium mb-1">Hotel/Residence</label>
             <input
               type="text"
               value={formData.hotelResidence}
               onChange={(e) => updateFormData({ hotelResidence: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
+              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
             />
           </div>
-
-          <div className="mt-4">
-            <label className="block text-sm font-medium mb-1">
-              Physical Address In Kenya <span className="text-red-500">*</span>
-            </label>
-            <textarea
+          <div>
+            <label className="block text-xs font-medium mb-1">Address in Kenya <span className="text-red-500">*</span></label>
+            <input
+              type="text"
               value={formData.physicalAddress}
               onChange={(e) => updateFormData({ physicalAddress: e.target.value })}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md"
-              rows={3}
+              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
               maxLength={40}
             />
-            <p className="text-sm text-gray-500 text-right">{40 - (formData.physicalAddress?.length || 0)} Characters left</p>
-            {errors.physicalAddress && <p className="text-red-500 text-xs mt-1">{errors.physicalAddress}</p>}
+            {errors.physicalAddress && <p className="text-red-500 text-xs mt-0.5">{errors.physicalAddress}</p>}
           </div>
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 mt-6 sm:mt-8">
-        <button className="w-full sm:w-auto px-6 py-2.5 sm:py-2 border border-gray-300 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors">
-          Back
-        </button>
+      {/* Compact navigation */}
+      <div className="flex justify-end gap-2 mt-4 pt-3 border-t border-gray-100">
         <button 
           onClick={handleNext}
-          className="w-full sm:w-auto px-6 py-2.5 sm:py-2 bg-[#CC0000] text-white rounded-md text-sm font-medium hover:bg-[#990000] transition-colors"
+          className="px-6 py-2 bg-[#CC0000] text-white rounded text-sm font-medium"
         >
-          {useFormContext().loading ? 'Saving...' : 'Next'}
+          {useFormContext().loading ? 'Saving...' : 'Next →'}
         </button>
       </div>
     </div>
@@ -1030,155 +1069,137 @@ const TravelInformation = () => {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Travel Information</h1>
-        <div className="flex gap-2">
-          <button className="px-4 py-2 border border-gray-300 rounded-md text-sm">
-            Save Draft
-          </button>
-          <button className="px-4 py-2 border border-gray-300 rounded-md text-sm flex items-center gap-2">
-            🇬🇧 English
-          </button>
-        </div>
+      {/* Compact header */}
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-lg font-bold text-[#CC0000]">Travel Information</h1>
+        <button className="px-2 py-1 border border-gray-200 rounded text-xs flex items-center gap-1">
+          🇬🇧 EN
+        </button>
       </div>
 
-      <div className="space-y-6">
-        <div>
-          <label className="block text-sm font-medium mb-1">
-            Arrival Date <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            placeholder="DD/MM/YYYY"
+      <div className="space-y-3">
+        {/* Arrival Date and From - side by side */}
+        <div className="grid grid-cols-2 gap-3">
+          <DateInput
+            label="Arrival Date"
+            required
             value={formData.arrivalDate}
-            onChange={(e) => {
-                const val = e.target.value;
-                if (/^[\d/]*$/.test(val) && val.length <= 10) {
-                   updateFormData({ arrivalDate: val });
-                }
-            }}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+            onChange={(val) => updateFormData({ arrivalDate: val })}
+            error={errors.arrivalDate}
+            minDate={new Date()}
           />
-          {errors.arrivalDate && <p className="text-red-500 text-xs mt-1">{errors.arrivalDate}</p>}
+          <div>
+            <label className="block text-xs font-medium mb-1">From <span className="text-red-500">*</span></label>
+            <select
+              value={formData.arrivingFrom}
+              onChange={(e) => updateFormData({ arrivingFrom: e.target.value })}
+              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+            >
+              {countries.map((country: any) => (
+                <option key={country.code} value={country.code}>{country.name}</option>
+              ))}
+            </select>
+            {errors.arrivingFrom && <p className="text-red-500 text-xs mt-0.5">{errors.arrivingFrom}</p>}
+          </div>
         </div>
 
+        {/* Conveyance Mode - inline buttons */}
         <div>
-          <label className="block text-sm font-medium mb-1">
-            Arriving From <span className="text-red-500">*</span>
-          </label>
-          <select
-            value={formData.arrivingFrom}
-            onChange={(e) => updateFormData({ arrivingFrom: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
-          >
-         {countries.map((country: any) => (
-            <option key={country.code} value={country.code}>
-              {country.name}
-            </option>
-          ))}
-          </select>
-          {errors.arrivingFrom && <p className="text-red-500 text-xs mt-1">{errors.arrivingFrom}</p>}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-2">
-            Conveyance Mode <span className="text-red-500">*</span>
-          </label>
-          <div className="flex gap-4">
+          <label className="block text-xs font-medium mb-1">Mode <span className="text-red-500">*</span></label>
+          <div className="flex gap-2">
             {['Air', 'Sea', 'Land'].map(option => (
-              <label key={option} className="flex items-center">
+              <label 
+                key={option} 
+                className={`flex-1 text-center py-1.5 rounded border cursor-pointer text-xs font-medium ${
+                  formData.conveyanceMode === option
+                    ? 'border-[#CC0000] bg-[#CC0000]/10 text-[#CC0000]' 
+                    : 'border-gray-200 text-gray-600'
+                }`}
+              >
                 <input
                   type="radio"
                   name="conveyanceMode"
                   value={option}
                   checked={formData.conveyanceMode === option}
                   onChange={(e) => updateFormData({ conveyanceMode: e.target.value })}
-                  className="w-4 h-4 text-orange-500"
+                  className="sr-only"
                 />
-                <span className="ml-2 text-sm">{option}</span>
+                {option}
               </label>
             ))}
           </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium mb-1">
-            {getVehicleLabel()} <span className="text-red-500">*</span>
-          </label>
-          <input
-            type="text"
-            value={formData.flightNumber}
-            onChange={(e) => updateFormData({ flightNumber: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
-          />
+        {/* Flight/Vessel and Entry Point - side by side */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs font-medium mb-1">{getVehicleLabel()}</label>
+            <input
+              type="text"
+              value={formData.flightNumber}
+              onChange={(e) => updateFormData({ flightNumber: e.target.value })}
+              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium mb-1">Entry Point <span className="text-red-500">*</span></label>
+            <select
+              value={formData.pointOfEntry}
+              onChange={(e) => updateFormData({ pointOfEntry: e.target.value })}
+              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+            >
+              <option value="">Select...</option>
+              {entryPoints?.map((ep: any) => (
+                <option key={ep.code} value={ep.code}>{ep.name}</option>
+              ))}
+            </select>
+          </div>
         </div>
 
+        {/* Countries visited - compact */}
         <div>
-          <label className="block text-sm font-medium mb-1">
-            Point Of Entry <span className="text-red-500">*</span>
-          </label>
+          <label className="block text-xs font-medium mb-1">Countries Visited (last 3 months)</label>
           <select
-            value={formData.pointOfEntry}
-            onChange={(e) => updateFormData({ pointOfEntry: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
-          >
-            <option value="">Select...</option>
-            {entryPoints?.map((ep: any) => (
-              <option key={ep.code} value={ep.code}>
-                {ep.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium mb-1">
-            Countries Visited In The Last 3 Months
-          </label>
-          <select
-            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+            className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
             onChange={(e) => {
               if (e.target.value && !formData.countriesVisited.includes(e.target.value)) {
-                updateFormData({
-                  countriesVisited: [...formData.countriesVisited, e.target.value]
-                });
+                updateFormData({ countriesVisited: [...formData.countriesVisited, e.target.value] });
               }
             }}
           >
-           {countries?.map((country: any) => (
-            <option key={country.code} value={country.code}>
-              {country.name}
-            </option>
-          ))}
-          </select>
-          <div className="flex flex-wrap gap-2 mt-2">
-            {formData.countriesVisited.map((country: string, idx: number) => (
-              <span key={idx} className="bg-gray-100 px-2 py-1 rounded-md text-sm flex items-center gap-1">
-                {country}
-                <button
-                  onClick={() => updateFormData({
-                    countriesVisited: formData.countriesVisited.filter((_: string, i: number) => i !== idx)
-                  })}
-                  className="text-gray-500 hover:text-red-500"
-                >
-                  ×
-                </button>
-              </span>
+            {countries?.map((country: any) => (
+              <option key={country.code} value={country.code}>{country.name}</option>
             ))}
-          </div>
+          </select>
+          {formData.countriesVisited.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-1">
+              {formData.countriesVisited.map((country: string, idx: number) => (
+                <span key={idx} className="bg-gray-100 px-2 py-0.5 rounded text-xs flex items-center gap-1">
+                  {country}
+                  <button
+                    onClick={() => updateFormData({
+                      countriesVisited: formData.countriesVisited.filter((_: string, i: number) => i !== idx)
+                    })}
+                    className="text-gray-400 hover:text-red-500"
+                  >×</button>
+                </span>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="flex justify-end gap-3 mt-8">
+      {/* Compact navigation */}
+      <div className="flex justify-between gap-2 mt-4 pt-3 border-t border-gray-100">
         <button 
           onClick={() => setCurrentStep(1)}
-          className="px-6 py-2 border border-gray-300 rounded-md"
+          className="px-4 py-2 border border-gray-300 rounded text-sm"
         >
-          Back
+          ← Back
         </button>
         <button 
           onClick={handleNext}
-          className="px-6 py-2 bg-black text-white rounded-md"
+          className="px-6 py-2 bg-[#CC0000] text-white rounded text-sm font-medium"
         >
           {useFormContext().loading ? 'Saving...' : 'Next'}
         </button>

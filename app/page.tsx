@@ -555,7 +555,7 @@ const DeclarationModal = ({ isOpen, onClose, declarationType, onSave }: any) => 
                     >
                       <option value="">...</option>
                       {currencies?.map((curr: any) => (
-                        <option key={curr.code} value={curr.code}>{curr.code}</option>
+                        <option key={curr.code} value={curr.code}>{curr.description}</option>
                       ))}
                     </select>
                   </div>
@@ -596,7 +596,7 @@ const DeclarationModal = ({ isOpen, onClose, declarationType, onSave }: any) => 
                     >
                       <option value="">Select...</option>
                       {currencies?.map((curr: any) => (
-                        <option key={curr.code} value={curr.code}>{curr.code}</option>
+                        <option key={curr.code} value={curr.code}>{curr.description}</option>
                       ))}
                     </select>
                   </div>

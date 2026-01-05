@@ -860,7 +860,7 @@ const PassengerInformation = () => {
               {['Male', 'Female'].map(option => (
                 <label 
                   key={option} 
-                  className={`flex-1 text-center py-1.5 rounded border cursor-pointer text-xs font-medium ${
+                  className={`flex-1 text-center py-3 rounded border cursor-pointer text-xs font-medium ${
                     formData.gender === option
                       ? 'border-[#CC0000] bg-[#CC0000]/10 text-[#CC0000]' 
                       : 'border-gray-200 text-gray-600'

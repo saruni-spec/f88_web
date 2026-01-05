@@ -303,7 +303,7 @@ const DateInput = ({
 
   return (
     <div>
-      <label className="block text-sm font-medium mb-1">
+      <label className="block text-xs font-medium mb-1">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       <input
@@ -331,9 +331,6 @@ const LandingPage = () => {
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
             Passenger Declaration Form - Kenya
           </h1>
-          <button className="px-3 py-1.5 border border-gray-200 rounded-md text-xs flex items-center gap-1.5 hover:bg-gray-50">
-            🇬🇧 English
-          </button>
         </div>
 
         <p className="text-gray-600 text-sm mb-4">
@@ -475,220 +472,225 @@ const DeclarationModal = ({ isOpen, onClose, declarationType, onSave }: any) => 
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="p-6">
-          <div className="flex justify-between items-start mb-6">
-            <h2 className="text-xl font-semibold">{config.title}</h2>
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
-              <X className="w-5 h-5" />
+    <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50">
+      <div className="bg-white rounded-t-xl sm:rounded-xl w-full sm:max-w-md max-h-[85vh] overflow-y-auto">
+        <div className="p-4">
+          {/* Compact header */}
+          <div className="flex justify-between items-center mb-3">
+            <h2 className="text-base font-semibold">{config.title}</h2>
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1">
+              <X className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-3">
+            {/* HS Code with search */}
             {config.fields.includes('hsCode') && (
               <div>
-                <label className="block text-sm font-medium mb-1">
-                  HS Code <span className="text-red-500">*</span>
-                </label>
+                <label className="block text-xs font-medium mb-1">HS Code <span className="text-red-500">*</span></label>
                 <input
                   type="text"
-                  placeholder="Type To Search..."
+                  placeholder="Search HS Code..."
                   value={formData.hsCode || ''}
                   onChange={(e) => {
-                      setFormData((prev: any) => ({ ...prev, hsCode: e.target.value }));
-                      handleHsCodeSearch(e.target.value);
+                    setFormData((prev: any) => ({ ...prev, hsCode: e.target.value }));
+                    handleHsCodeSearch(e.target.value);
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
                 />
-                {searching && <p className="text-xs text-gray-500">Searching...</p>}
+                {searching && <p className="text-xs text-gray-500 mt-0.5">Searching...</p>}
                 {hsCodeResults.length > 0 && (
-                    <ul className="border border-gray-200 rounded-md mt-1 max-h-40 overflow-y-auto">
-                        {hsCodeResults.map((hs: any) => (
-                            <li 
-                                key={hs.id} 
-                                className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-                                onClick={() => {
-                                    setFormData((prev: any) => ({ ...prev, hsCode: hs.hs_code, description: hs.description }));
-                                    setHsCodeResults([]);
-                                }}
-                            >
-                                {hs.hs_code} - {hs.description}
-                            </li>
-                        ))}
-                    </ul>
+                  <ul className="border border-gray-200 rounded mt-1 max-h-32 overflow-y-auto">
+                    {hsCodeResults.map((hs: any) => (
+                      <li 
+                        key={hs.id} 
+                        className="px-2 py-1.5 hover:bg-gray-100 cursor-pointer text-xs"
+                        onClick={() => {
+                          setFormData((prev: any) => ({ ...prev, hsCode: hs.hs_code, description: hs.description }));
+                          setHsCodeResults([]);
+                        }}
+                      >
+                        {hs.hs_code} - {hs.description}
+                      </li>
+                    ))}
+                  </ul>
                 )}
               </div>
             )}
 
+            {/* Description */}
             {config.fields.includes('description') && (
               <div>
-                <label className="block text-sm font-medium mb-1">Description</label>
+                <label className="block text-xs font-medium mb-1">Description</label>
                 <textarea
                   value={formData.description || ''}
                   onChange={(e) => setFormData((prev: any) => ({ ...prev, description: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                  rows={3}
+                  className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                  rows={2}
                 />
               </div>
             )}
 
-            {config.fields.includes('packages') && (
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Number Of Packages <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  value={formData.packages || ''}
-                  onChange={(e) => setFormData((prev: any) => ({ ...prev, packages: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                />
+            {/* Packages, Currency, Value - 3-column grid */}
+            {(config.fields.includes('packages') || config.fields.includes('currency') || config.fields.includes('value')) && (
+              <div className="grid grid-cols-3 gap-2">
+                {config.fields.includes('packages') && (
+                  <div>
+                    <label className="block text-xs font-medium mb-1">Qty <span className="text-red-500">*</span></label>
+                    <input
+                      type="number"
+                      value={formData.packages || ''}
+                      onChange={(e) => setFormData((prev: any) => ({ ...prev, packages: e.target.value }))}
+                      className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                    />
+                  </div>
+                )}
+                {config.fields.includes('currency') && (
+                  <div>
+                    <label className="block text-xs font-medium mb-1">Currency <span className="text-red-500">*</span></label>
+                    <select
+                      value={formData.currency || ''}
+                      onChange={(e) => setFormData((prev: any) => ({ ...prev, currency: e.target.value }))}
+                      className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                    >
+                      <option value="">...</option>
+                      {currencies?.map((curr: any) => (
+                        <option key={curr.code} value={curr.code}>{curr.code}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                {config.fields.includes('value') && (
+                  <div>
+                    <label className="block text-xs font-medium mb-1">Value <span className="text-red-500">*</span></label>
+                    <input
+                      type="number"
+                      value={formData.value || ''}
+                      onChange={(e) => setFormData((prev: any) => ({ ...prev, value: e.target.value }))}
+                      className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                    />
+                  </div>
+                )}
               </div>
             )}
 
-            {config.fields.includes('currency') && (
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Currency <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={formData.currency || ''}
-                  onChange={(e) => setFormData((prev: any) => ({ ...prev, currency: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                >
-                  <option value="">Select Currency...</option>
-                  {currencies?.map((curr: any) => (
-                    <option key={curr.code} value={curr.code}>
-                      {curr.description}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {config.fields.includes('value') && (
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Value Of Item <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  value={formData.value || '0'}
-                  onChange={(e) => setFormData((prev: any) => ({ ...prev, value: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                />
-              </div>
-            )}
-
+            {/* Currency declaration fields - 2-column grid */}
             {config.fields.includes('valueOfFund') && (
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Value Of Fund <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="number"
-                  value={formData.valueOfFund || ''}
-                  onChange={(e) => setFormData((prev: any) => ({ ...prev, valueOfFund: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                />
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-xs font-medium mb-1">Value of Fund <span className="text-red-500">*</span></label>
+                  <input
+                    type="number"
+                    value={formData.valueOfFund || ''}
+                    onChange={(e) => setFormData((prev: any) => ({ ...prev, valueOfFund: e.target.value }))}
+                    className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                  />
+                </div>
+                {config.fields.includes('currency') && (
+                  <div>
+                    <label className="block text-xs font-medium mb-1">Currency</label>
+                    <select
+                      value={formData.currency || ''}
+                      onChange={(e) => setFormData((prev: any) => ({ ...prev, currency: e.target.value }))}
+                      className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                    >
+                      <option value="">Select...</option>
+                      {currencies?.map((curr: any) => (
+                        <option key={curr.code} value={curr.code}>{curr.code}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
             )}
 
-            {config.fields.includes('sourceOfFund') && (
-              <div>
-                <label className="block text-sm font-medium mb-1">Source Of Fund</label>
-                <select
-                  value={formData.sourceOfFund || ''}
-                  onChange={(e) => setFormData((prev: any) => ({ ...prev, sourceOfFund: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                >
-                  <option value="">Select...</option>
-                  <option value="Employment">Employment</option>
-                  <option value="Business">Business</option>
-                  <option value="Investment">Investment</option>
-                </select>
+            {/* Source and Purpose of Fund */}
+            {(config.fields.includes('sourceOfFund') || config.fields.includes('purposeOfFund')) && (
+              <div className="grid grid-cols-2 gap-2">
+                {config.fields.includes('sourceOfFund') && (
+                  <div>
+                    <label className="block text-xs font-medium mb-1">Source</label>
+                    <select
+                      value={formData.sourceOfFund || ''}
+                      onChange={(e) => setFormData((prev: any) => ({ ...prev, sourceOfFund: e.target.value }))}
+                      className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                    >
+                      <option value="">Select...</option>
+                      <option value="Employment">Employment</option>
+                      <option value="Business">Business</option>
+                      <option value="Investment">Investment</option>
+                    </select>
+                  </div>
+                )}
+                {config.fields.includes('purposeOfFund') && (
+                  <div>
+                    <label className="block text-xs font-medium mb-1">Purpose</label>
+                    <select
+                      value={formData.purposeOfFund || ''}
+                      onChange={(e) => setFormData((prev: any) => ({ ...prev, purposeOfFund: e.target.value }))}
+                      className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                    >
+                      <option value="">Select...</option>
+                      <option value="Travel">Travel</option>
+                      <option value="Business">Business</option>
+                      <option value="Investment">Investment</option>
+                    </select>
+                  </div>
+                )}
               </div>
             )}
 
-            {config.fields.includes('purposeOfFund') && (
-              <div>
-                <label className="block text-sm font-medium mb-1">Purpose Of Fund</label>
-                <select
-                  value={formData.purposeOfFund || ''}
-                  onChange={(e) => setFormData((prev: any) => ({ ...prev, purposeOfFund: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                >
-                  <option value="">Select...</option>
-                  <option value="Travel">Travel</option>
-                  <option value="Business">Business</option>
-                  <option value="Investment">Investment</option>
-                </select>
-              </div>
-            )}
-
+            {/* Mobile device fields - 3-column grid */}
             {config.fields.includes('make') && (
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Make <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.make || ''}
-                  onChange={(e) => setFormData((prev: any) => ({ ...prev, make: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                />
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label className="block text-xs font-medium mb-1">Make <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    value={formData.make || ''}
+                    onChange={(e) => setFormData((prev: any) => ({ ...prev, make: e.target.value }))}
+                    className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1">Model <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    value={formData.model || ''}
+                    onChange={(e) => setFormData((prev: any) => ({ ...prev, model: e.target.value }))}
+                    className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1">IMEI <span className="text-red-500">*</span></label>
+                  <input
+                    type="text"
+                    value={formData.imei || ''}
+                    onChange={(e) => setFormData((prev: any) => ({ ...prev, imei: e.target.value }))}
+                    className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+                  />
+                </div>
               </div>
             )}
 
-            {config.fields.includes('model') && (
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Model <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.model || ''}
-                  onChange={(e) => setFormData((prev: any) => ({ ...prev, model: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                />
-              </div>
-            )}
-
-            {config.fields.includes('imei') && (
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  IMEI Number <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.imei || ''}
-                  onChange={(e) => setFormData((prev: any) => ({ ...prev, imei: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                />
-              </div>
-            )}
-
+            {/* Certificate No */}
             {config.fields.includes('certificateNo') && (
               <div>
-                <label className="block text-sm font-medium mb-1">
-                  Re-Importation Certificate No. <span className="text-red-500">*</span>
-                </label>
+                <label className="block text-xs font-medium mb-1">Certificate No. <span className="text-red-500">*</span></label>
                 <input
                   type="text"
                   value={formData.certificateNo || ''}
                   onChange={(e) => setFormData((prev: any) => ({ ...prev, certificateNo: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
                 />
               </div>
             )}
 
+            {/* Compact file upload */}
             {config.fields.includes('file') && (
               <div>
-                <label className="block text-sm font-medium mb-1">
-                  Attach relevant documents (e.g., invoices, permits) <span className="text-red-500">*</span>
-                </label>
-                <div className="border-2 border-dashed border-gray-300 rounded-md p-8 text-center">
+                <label className="block text-xs font-medium mb-1">Attachment</label>
+                <div className="border border-dashed border-gray-300 rounded p-3 text-center">
                   <input
                     type="file"
                     id="file-upload"
@@ -697,29 +699,22 @@ const DeclarationModal = ({ isOpen, onClose, declarationType, onSave }: any) => 
                     accept=".pdf,.jpg,.jpeg,.png"
                   />
                   <label htmlFor="file-upload" className="cursor-pointer">
-                    <Upload className="w-12 h-12 mx-auto text-gray-400 mb-2" />
-                    <p className="text-sm">
-                      <span className="text-orange-500">Click to upload</span> or Drag and drop files here
+                    <Upload className="w-6 h-6 mx-auto text-gray-400 mb-1" />
+                    <p className="text-xs text-gray-500">
+                      {file ? <span className="text-green-600">{file.name}</span> : 'Click to upload'}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">Max file size: 10MB</p>
-                    {file && <p className="text-sm text-green-600 mt-2">Selected: {file.name}</p>}
                   </label>
                 </div>
               </div>
             )}
           </div>
 
-          <div className="flex justify-end gap-3 mt-6">
-            <button
-              onClick={onClose}
-              className="px-6 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
-            >
+          {/* Compact buttons */}
+          <div className="flex justify-end gap-2 mt-4 pt-3 border-t border-gray-100">
+            <button onClick={onClose} className="px-4 py-1.5 border border-gray-300 rounded text-sm">
               Cancel
             </button>
-            <button
-              onClick={handleSave}
-              className="px-6 py-2 bg-gray-300 text-gray-600 rounded-md"
-            >
+            <button onClick={handleSave} className="px-4 py-1.5 bg-[#CC0000] text-white rounded text-sm font-medium">
               Save
             </button>
           </div>
@@ -886,8 +881,8 @@ const PassengerInformation = () => {
           </div>
         </div>
 
-        {/* DOB, Gender, Profession row */}
-        <div className="grid grid-cols-3 gap-3">
+        {/* DOB and Gender row */}
+        <div className="grid grid-cols-2 gap-3">
           <DateInput
             label="Date of Birth"
             required
@@ -899,11 +894,11 @@ const PassengerInformation = () => {
           <div>
             <label className="block text-xs font-medium mb-1">Gender <span className="text-red-500">*</span></label>
             <div className="flex gap-2">
-              {['M', 'F'].map(option => (
+              {['Male', 'Female'].map(option => (
                 <label 
                   key={option} 
                   className={`flex-1 text-center py-1.5 rounded border cursor-pointer text-xs font-medium ${
-                    formData.gender === (option === 'M' ? 'Male' : 'Female')
+                    formData.gender === option
                       ? 'border-[#CC0000] bg-[#CC0000]/10 text-[#CC0000]' 
                       : 'border-gray-200 text-gray-600'
                   }`}
@@ -911,8 +906,8 @@ const PassengerInformation = () => {
                   <input
                     type="radio"
                     name="gender"
-                    value={option === 'M' ? 'Male' : 'Female'}
-                    checked={formData.gender === (option === 'M' ? 'Male' : 'Female')}
+                    value={option}
+                    checked={formData.gender === option}
                     onChange={(e) => updateFormData({ gender: e.target.value })}
                     className="sr-only"
                   />
@@ -922,15 +917,17 @@ const PassengerInformation = () => {
             </div>
             {errors.gender && <p className="text-red-500 text-xs mt-0.5">{errors.gender}</p>}
           </div>
-          <div>
-            <label className="block text-xs font-medium mb-1">Profession</label>
-            <input
-              type="text"
-              value={formData.profession || ''}
-              onChange={(e) => updateFormData({ profession: e.target.value })}
-              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
-            />
-          </div>
+        </div>
+
+        {/* Profession - own row */}
+        <div>
+          <label className="block text-xs font-medium mb-1">Profession</label>
+          <input
+            type="text"
+            value={formData.profession || ''}
+            onChange={(e) => updateFormData({ profession: e.target.value })}
+            className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm"
+          />
         </div>
 
         {formData.citizenship === 'Kenyan' && (
@@ -1338,71 +1335,65 @@ const Declarations = () => {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Declarations</h1>
-        <div className="flex gap-2">
-          <button className="px-4 py-2 border border-gray-300 rounded-md text-sm">
-            Save Draft
-          </button>
-          <button className="px-4 py-2 border border-gray-300 rounded-md text-sm flex items-center gap-2">
-            🇬🇧 English
-          </button>
-        </div>
+      {/* Compact header */}
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-lg font-bold text-[#CC0000]">Declarations</h1>
+        <button className="px-2 py-1 border border-gray-200 rounded text-xs flex items-center gap-1">
+          🇬🇧 EN
+        </button>
       </div>
 
-      <div className="space-y-6">
+      <div className="space-y-2">
         {declarationTypes.map((type) => (
-          <div key={type.id} className="border-b border-gray-200 pb-4">
-            <div className="flex justify-between items-center mb-2">
-              <span className="font-medium">{type.label}</span>
-              <div className="flex gap-4">
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name={type.id}
-                    value="Yes"
-                    checked={formData[type.id] === 'Yes'}
-                    onChange={(e) => updateFormData({ [type.id]: e.target.value })}
-                    className="w-4 h-4 text-orange-500"
-                  />
-                  <span className="ml-2 text-sm">Yes</span>
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name={type.id}
-                    value="No"
-                    checked={formData[type.id] === 'No'}
-                    onChange={(e) => updateFormData({ [type.id]: e.target.value })}
-                    className="w-4 h-4 text-orange-500"
-                  />
-                  <span className="ml-2 text-sm">No</span>
-                </label>
+          <div key={type.id} className="border-b border-gray-100 pb-2">
+            <div className="flex justify-between items-center">
+              <span className="text-sm font-medium">{type.label}</span>
+              <div className="flex gap-1">
+                {['Yes', 'No'].map((option) => (
+                  <label 
+                    key={option}
+                    className={`px-3 py-1 rounded text-xs font-medium cursor-pointer ${
+                      formData[type.id] === option
+                        ? option === 'Yes' 
+                          ? 'bg-[#CC0000]/10 text-[#CC0000] border border-[#CC0000]'
+                          : 'bg-gray-100 text-gray-600 border border-gray-300'
+                        : 'bg-white text-gray-500 border border-gray-200'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name={type.id}
+                      value={option}
+                      checked={formData[type.id] === option}
+                      onChange={(e) => updateFormData({ [type.id]: e.target.value })}
+                      className="sr-only"
+                    />
+                    {option}
+                  </label>
+                ))}
               </div>
             </div>
 
             {formData[type.id] === 'Yes' && (
-              <div className="mt-4 pl-4">
+              <div className="mt-2 ml-2">
                 {type.id === 'prohibitedItems' ? (
-                   <div className="p-4 bg-red-50 border border-red-200 rounded-md text-red-700">
-                      All prohibited items will be seized by KRA customs officer
-                   </div>
+                  <div className="p-2 bg-red-50 border border-red-200 rounded text-red-700 text-xs">
+                    All prohibited items will be seized
+                  </div>
                 ) : (
                   <>
                     {formData[`${type.id}List`]?.map((item: any, idx: number) => (
-                      <div key={idx} className="flex justify-between items-center bg-gray-50 p-3 rounded-md mb-2">
-                        <span className="text-sm">{item.description || item.hsCode}</span>
+                      <div key={idx} className="flex justify-between items-center bg-gray-50 p-2 rounded text-xs mb-1">
+                        <span className="truncate flex-1">{item.description || item.hsCode || 'Item'}</span>
                         <button
                           onClick={() => removeDeclarationItem(type.id, idx)}
-                          className="text-red-500 text-sm hover:underline"
-                        >
-                          Remove
-                        </button>
+                          className="text-red-500 ml-2"
+                        >×</button>
                       </div>
                     ))}
                     <button
                       onClick={() => setActiveModal(type.id)}
-                      className="text-orange-500 text-sm font-medium hover:underline"
+                      className="text-[#CC0000] text-xs font-medium"
                     >
                       + Add Item
                     </button>
@@ -1414,18 +1405,19 @@ const Declarations = () => {
         ))}
       </div>
 
-      <div className="flex justify-end gap-3 mt-8">
+      {/* Compact navigation */}
+      <div className="flex justify-between gap-2 mt-4 pt-3 border-t border-gray-100">
         <button 
           onClick={() => setCurrentStep(2)}
-          className="px-6 py-2 border border-gray-300 rounded-md"
+          className="px-4 py-2 border border-gray-300 rounded text-sm"
         >
-          Back
+          ← Back
         </button>
         <button 
           onClick={handleNext}
-          className="px-6 py-2 bg-black text-white rounded-md"
+          className="px-6 py-2 bg-[#CC0000] text-white rounded text-sm font-medium"
         >
-          {useFormContext().loading ? 'Calculating...' : 'Next'}
+          {useFormContext().loading ? 'Calculating...' : 'Next →'}
         </button>
       </div>
 
@@ -1486,59 +1478,59 @@ const TaxComputation = () => {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Tax Computation</h1>
-        <div className="flex gap-2">
-          <button className="px-4 py-2 border border-gray-300 rounded-md text-sm">
-            Save Draft
-          </button>
-          <button className="px-4 py-2 border border-gray-300 rounded-md text-sm flex items-center gap-2">
-            🇬🇧 English
-          </button>
-        </div>
+      {/* Compact header */}
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-lg font-bold text-[#CC0000]">Tax Computation</h1>
+        <button className="px-2 py-1 border border-gray-200 rounded text-xs flex items-center gap-1">
+          🇬🇧 EN
+        </button>
       </div>
 
-      <div className="bg-gray-50 p-6 rounded-lg mb-6">
-        <h2 className="text-lg font-semibold mb-4">Assessment Summary</h2>
-        <div className="space-y-6">
+      {/* Compact assessment summary */}
+      <div className="bg-gray-50 p-4 rounded-lg mb-4">
+        <h2 className="text-sm font-semibold mb-3">Assessment Summary</h2>
+        <div className="space-y-3">
           {groupedAssessments && Object.entries(groupedAssessments).map(([itemId, assessments]: [string, any]) => (
-              <div key={itemId} className="border-b border-gray-200 pb-4">
-                  <h3 className="font-medium mb-2">Item #{itemId}</h3>
-                  {assessments.map((assessment: any, idx: number) => (
-                      <div key={idx} className="flex justify-between text-sm text-gray-600 mb-1">
-                          <span>{assessment.tax_type}</span>
-                          <span>KES {assessment.tax_amount}</span>
-                      </div>
-                  ))}
-              </div>
+            <div key={itemId} className="border-b border-gray-200 pb-2">
+              <h3 className="text-xs font-medium mb-1 text-gray-700">Item #{itemId}</h3>
+              {assessments.map((assessment: any, idx: number) => (
+                <div key={idx} className="flex justify-between text-xs text-gray-600 mb-0.5">
+                  <span>{assessment.tax_type}</span>
+                  <span>KES {assessment.tax_amount}</span>
+                </div>
+              ))}
+            </div>
           ))}
           
           <div className="flex justify-between pt-2 border-t border-gray-300">
-            <span className="font-bold">Total Tax Payable</span>
-            <span className="font-bold text-lg">KES {totalTax}</span>
+            <span className="font-bold text-sm">Total Tax</span>
+            <span className="font-bold text-base text-[#CC0000]">KES {totalTax.toLocaleString()}</span>
           </div>
         </div>
       </div>
 
-      <div className="flex justify-end gap-3 mt-8">
+      {/* Compact navigation with payment options */}
+      <div className="flex justify-between items-center gap-2 pt-3 border-t border-gray-100">
         <button 
           onClick={() => setCurrentStep(3)}
-          className="px-6 py-2 border border-gray-300 rounded-md"
+          className="px-4 py-2 border border-gray-300 rounded text-sm"
         >
-          Back
+          ← Back
         </button>
-        <button 
-          onClick={() => handlePayment(false)}
-          className="px-6 py-2 border border-black text-black rounded-md hover:bg-gray-100"
-        >
-          {useFormContext().loading ? 'Processing...' : 'Pay Later'}
-        </button>
-        <button 
-          onClick={() => handlePayment(true)}
-          className="px-6 py-2 bg-black text-white rounded-md hover:bg-gray-800"
-        >
-          {useFormContext().loading ? 'Processing...' : 'Pay Now'}
-        </button>
+        <div className="flex gap-2">
+          <button 
+            onClick={() => handlePayment(false)}
+            className="px-4 py-2 border border-gray-400 text-gray-700 rounded text-sm"
+          >
+            Pay Later
+          </button>
+          <button 
+            onClick={() => handlePayment(true)}
+            className="px-4 py-2 bg-[#CC0000] text-white rounded text-sm font-medium"
+          >
+            {useFormContext().loading ? 'Processing...' : 'Pay Now'}
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -1564,9 +1556,7 @@ export default function Home() {
               <span className="hidden sm:inline">Save Draft</span>
               <span className="sm:hidden">Save</span>
             </button>
-            <button className="px-2 sm:px-3 py-1.5 border border-white/30 text-white rounded-md text-xs sm:text-sm font-medium flex items-center gap-1.5 hover:bg-white/10 transition-colors">
-              🇬🇧 <span className="hidden sm:inline">English</span>
-            </button>
+           
           </div>
         </div>
       </div>

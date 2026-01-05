@@ -15,6 +15,7 @@ import {
   sendWhatsappNotification,
   initializeDeclaration
 } from './actions/customs';
+import { Layout } from './components/Layout';
 
 // Form Context
 const FormContext = createContext<any>(null);
@@ -1530,71 +1531,71 @@ const TaxComputation = () => {
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-[#F5F5F5]">
-      {/* Header */}
-      <div className="bg-[#CC0000] shadow-lg sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-3 sm:px-6 lg:px-8 h-14 sm:h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#CC0000] rounded-lg flex items-center justify-center text-[#CC0000] font-bold text-sm sm:text-base">
-              KRA
-            </div>
-            <div>
-              <span className="font-bold text-sm sm:text-lg text-white">F88 Declaration</span>
-              <p className="text-[10px] sm:text-xs text-white/70 hidden sm:block">Customs Declaration Form</p>
-            </div>
-          </div>
-          <div className="flex gap-1.5 sm:gap-2">
-            <button className="px-2 sm:px-3 py-1.5 bg-[#CC0000] text-[#CC0000] rounded-md text-xs sm:text-sm font-medium hover:bg-[#990000] transition-colors">
-              <span className="hidden sm:inline">Save Draft</span>
-              <span className="sm:hidden">Save</span>
-            </button>
-           
-          </div>
+    <div className="min-h-screen bg-gray-50">
+      <Suspense fallback={
+        <div className="flex h-screen items-center justify-center">
+          <div className="animate-spin w-8 h-8 border-4 border-[#CC0000] border-t-transparent rounded-full"></div>
         </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="max-w-4xl mx-auto py-4 sm:py-8 px-3 sm:px-6 lg:px-8">
-        <Suspense fallback={
-          <div className="bg-white rounded-xl shadow-sm p-8 flex items-center justify-center">
-            <div className="animate-spin w-8 h-8 border-4 border-[#CC0000] border-t-transparent rounded-full"></div>
-          </div>
-        }>
-          <FormProvider>
-            <MainContent />
-          </FormProvider>
-        </Suspense>
-      </div>
-
-      {/* Footer */}
-      <div className="bg-[#CC0000] py-4 mt-8">
-        <div className="max-w-4xl mx-auto px-3 sm:px-6 text-center">
-          <p className="text-white/70 text-xs sm:text-sm">
-            © {new Date().getFullYear()} Kenya Revenue Authority. All rights reserved.
-          </p>
-        </div>
-      </div>
+      }>
+        <FormProvider>
+          <MainContent />
+        </FormProvider>
+      </Suspense>
     </div>
   );
 }
 
+// Main Content
 const MainContent = () => {
-  const { currentStep } = useFormContext();
+  const { currentStep, setCurrentStep, formData } = useFormContext();
 
-  // If step is 0, show Landing Page. 
-  // Else show the Form Container with Progress Steps
-  if (currentStep === 0) {
-    return <LandingPage />;
-  }
+  const getStepTitle = () => {
+    switch(currentStep) {
+      case 0: return "F88 Declaration";
+      case 1: return "Passenger Information";
+      case 2: return "Travel Information";
+      case 3: return "Declarations";
+      case 4: return "Tax Computation";
+      default: return "F88 Declaration";
+    }
+  };
+
+  const getStepIndicator = () => {
+    if (currentStep === 0) return undefined;
+    if (currentStep > 4) return undefined; // Success/Payment
+    return `Step ${currentStep} of 4`;
+  };
+
+  const handleBack = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+    } else {
+       // Allow going back to home from step 1
+       setCurrentStep(0);
+    }
+  };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 md:p-8 border-t-4 border-[#CC0000]">
-      <ProgressSteps currentStep={currentStep} />
-      
-      {currentStep === 1 && <PassengerInformation />}
-      {currentStep === 2 && <TravelInformation />}
-      {currentStep === 3 && <Declarations />}
-      {currentStep === 4 && <TaxComputation />}
-    </div>
+    <Layout
+      title={getStepTitle()}
+      step={getStepIndicator()}
+      onBack={currentStep > 0 ? handleBack : undefined}
+      phone={formData?.phone}
+      showMenu={true}
+      showHeader={true}
+      showFooter={true}
+    >
+      {currentStep === 0 ? (
+        <LandingPage />
+      ) : (
+        <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 md:p-8 border-t-4 border-[#CC0000]">
+          <ProgressSteps currentStep={currentStep} />
+          {currentStep === 1 && <PassengerInformation />}
+          {currentStep === 2 && <TravelInformation />}
+          {currentStep === 3 && <Declarations />}
+          {currentStep === 4 && <TaxComputation />}
+        </div>
+      )}
+    </Layout>
   );
 };

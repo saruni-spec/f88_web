@@ -780,7 +780,14 @@ const PassengerInformation = () => {
                   name="citizenship"
                   value={option}
                   checked={formData.citizenship === option}
-                  onChange={(e) => updateFormData({ citizenship: e.target.value })}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    const updates: any = { citizenship: val };
+                    if (val === 'Kenyan') {
+                      updates.nationality = 'KE';
+                    }
+                    updateFormData(updates);
+                  }}
                   className="w-3.5 h-3.5"
                 />
                 <span className="font-medium text-gray-700">{option}</span>

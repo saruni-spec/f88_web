@@ -23,7 +23,7 @@ export function Layout({ children, title, step, onBack, showMenu = false, showHe
   const router = useRouter();
 
   const handleMenuClick = () => {
-    window.location.href = `https://webviewmenu.vercel.app?phone=${phone}`;
+    window.location.href = `https://tax-one-iota.vercel.app?phone=${phone}`;
   };
 
   const handleLogout = async () => {
@@ -39,7 +39,7 @@ export function Layout({ children, title, step, onBack, showMenu = false, showHe
   };
 
    const handleMainMenu = () => {
-   window.location.href = `https://webviewmenu.vercel.app?phone=${phone}`;
+   window.location.href = `https://tax-one-iota.vercel.app?phone=${phone}`;
   };
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
